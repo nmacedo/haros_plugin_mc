@@ -75,7 +75,8 @@ class Num(Value):
 				inclusion_aux += ("\t" + signature + " in (" + 
 							' + '.join(inclusions_list) + ")\n")
 		if len(inclusion_aux)>0:
-			s += "fact Inclusions {\n" + inclusions_aux + "}\n\n"
+			s += "fact Inclusions {\n" + inclusion_aux + "}\n\n"
+		
 		# Singletons fact
 		for signature in self.concrete_values.keys():
 			if self.__is_singleton(signature):

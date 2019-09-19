@@ -11,6 +11,7 @@ class facade(object):
 		print(self.model)	
 	
 	def arch_spec(self):
+		print("Creating Specification ....")
 		module_name = "module " + self.configuration_name + "\n\n"
 		return (module_name + 
 			self.architecture.spec())

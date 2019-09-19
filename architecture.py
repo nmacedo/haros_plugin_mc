@@ -129,8 +129,33 @@ class Architecture:
 
 		# Range
 		if hpl_value.is_range:
-			print("Range Values Are Unsupported")
-			raise Exception ('Range Values Are Unsupported.')
+			topic_obj = self.__topics[topic]
+			message_type = topic_obj.message_type
+			root_value_obj = self.__values[message_type]
+
+			lower = hpl_value.lower_bound
+			upper = hpl_value.upper_bound
+			if lower.is_reference or upper.is_reference:
+				raise Exception ('References on Ranges are Unsupported.')
+			lower_value = lower.value
+			upper_value = upper.value
+
+			if isinstance(root_value_obj,Num):
+				sub_signature_name = (root_value_obj.signature + "_" + str(lower_value) + "_" +
+									str(upper_value))
+				root_value_obj.add_extension(sub_signature_name,
+											interval([lower_value,upper_value]))
+				return sub_signature_name
+			else:
+				signature = root_value_obj.signature
+				new_root_value_obj = Num(signature,message_type)
+				sub_signature_name = (root_value_obj.sugnature + "_" + str(lower_value) + "_" +
+									str(upper_value))
+				new_root_value_obj.add_extension(sub_signature_name,
+												interval([lower_value,upper_value]))
+				self.values.update({message_type: new_root_value_obj})
+				return sub_signature_name
+			
 
 		#Sets
 		if hpl_value.is_set: 

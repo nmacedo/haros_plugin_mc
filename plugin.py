@@ -24,13 +24,11 @@ def configuration_analysis(iface, scope):
 	prop4 = """globally: /supervisor/cmd_vel {linear.x = 2.0} as E causes /supervisor/cmd_vel {linear.x = $E.linear.x}""" 
 	prop5 = """globally: /supervisor/cmd_vel {linear.x = 2.0} as E requires /supervisor/cmd_vel {linear.x = $E.linear.x}""" 
 	prop4 = """globally: /kinect2/qhd/camera_info {data = 1} requires /supervisor/cmd_vel {linear.x = 2.0}"""
+ 	prop5 = """globally: /supervisor/cmd_vel {linear.x in 2.0 to 10.0} as E requires /supervisor/cmd_vel {linear.x = $E.linear.x}"""
  	hp = hpl_parser()
-	ps = [hp.parse(prop1),hp.parse(prop2),hp.parse(prop3),hp.parse(prop4)]
+	ps = [hp.parse(prop1),hp.parse(prop2),hp.parse(prop3),hp.parse(prop4),hp.parse(prop5)]
 
 
-	#print("observable topic:" + str(ps[3].observable.behaviour.chains[0].events[0].topic))
-	#print("trigger topic:" + str(ps[3].observable.trigger.chains[0].events[0].topic))
-	#print("trigger topic:")
 	interface = facade(scope.name, scope.nodes, scope.topics,properties=ps)
 
  
