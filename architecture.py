@@ -75,12 +75,11 @@ class Architecture:
 			return True
 
 	#Hpl_Value , String -> String + self.REFERENCE + Exception
-	def __validate_value(self,hpl_value,topic):
-	
+	def __validate_value(self,hpl_value,topic):	
 		#References
 		if hpl_value.is_reference:
 			self.__validate_field(hpl_value,topic)
-			return self.REFERENCE
+			return [self.REFERENCE]
 		
 		#Literals
 		if hpl_value.is_literal:
@@ -95,7 +94,7 @@ class Architecture:
 					sub_signature_name = root_value_obj.signature + "_" + str(real_value)
 					root_value_obj.add_extension(sub_signature_name,
 												interval(real_value))
-					return sub_signature_name
+					return [sub_signature_name]
 				else:
 					signature = root_value_obj.signature		
 					new_root_value_obj = Num(signature,message_type)
@@ -103,7 +102,7 @@ class Architecture:
 					new_root_value_obj.add_extension(sub_signature_name,
 													interval(real_value))
 					self.__values.update({message_type: new_root_value_obj})
-					return sub_signature_name
+					return [sub_signature_name]
 
 			#Literal Booleans
 			if isinstance(real_value, bool):
@@ -117,15 +116,14 @@ class Architecture:
 				if isinstance(root_value_obj,String):
 					sub_signature_name = root_value_obj.signature + "_" + real_value
 					root_value_obj.add_extension(sub_signature_name,real_value)
-					return sub_signature_name
+					return [sub_signature_name]
 				else:
 					signature = root_value_obj.signature		
 					new_root_value_obj = String(signature,message_type)
 					sub_signature_name = signature + "_" + real_value
 					new_root_value_obj.add_extension(sub_signature_name,real_value)
 					self.__values.update({message_type: new_root_value_obj})
-					return sub_signature_name
-
+					return [sub_signature_name]
 
 		# Range
 		if hpl_value.is_range:
@@ -136,7 +134,7 @@ class Architecture:
 			lower = hpl_value.lower_bound
 			upper = hpl_value.upper_bound
 			if lower.is_reference or upper.is_reference:
-				raise Exception ('References on Ranges are Unsupported.')
+				raise Exception ('Unsupported Use of References.')
 			lower_value = lower.value
 			upper_value = upper.value
 
@@ -145,7 +143,7 @@ class Architecture:
 									str(upper_value))
 				root_value_obj.add_extension(sub_signature_name,
 											interval([lower_value,upper_value]))
-				return sub_signature_name
+				return [sub_signature_name]
 			else:
 				signature = root_value_obj.signature
 				new_root_value_obj = Num(signature,message_type)
@@ -154,13 +152,56 @@ class Architecture:
 				new_root_value_obj.add_extension(sub_signature_name,
 												interval([lower_value,upper_value]))
 				self.values.update({message_type: new_root_value_obj})
-				return sub_signature_name
+				return [sub_signature_name]
 			
 
 		#Sets
 		if hpl_value.is_set: 
-			print("Unsupported Value Use")
-			raise Exception('Unsupported Value Use.')
+			topic_obj = self.__topics[topic]
+			message_type = topic_obj.message_type
+			root_value_obj = self.__values[message_type]
+			values = hpl_value.values
+			nums = (filter(lambda x: isinstance(x.value,(int,long,float)), values) == values)
+			if nums == True:
+				sub_signature_names = []
+				for v in values:
+					real_value = v.value
+					if isinstance(root_value_obj,Num):
+						sub_signature_name = root_value_obj.signature + "_" + str(real_value)
+						root_value_obj.add_extension(sub_signature_name,interval(real_value))
+						sub_signature_names.append(sub_signature_name)
+					else:
+						signature = root_value_obj.signature		
+						new_root_value_obj = Num(signature,message_type)
+						sub_signature_name = signature + "_" + str(real_value)
+						new_root_value_obj.add_extension(sub_signature_name,
+														interval(real_value))
+						self.__values.update({message_type: new_root_value_obj})
+						sub_signature_names.append(sub_signature_name)
+
+				return sub_signature_names
+
+			elif strings:
+				sub_signature_names = []
+				for v in values:
+					real_value = v.value
+					if isinstance(root_value_obj,String):
+						sub_signature_name = root_value_obj.signature + "_" + real_value
+						root_value_obj.add_extension(sub_signature_name,real_value)
+						sub_signature_names.append(sub_signature_name)
+					else:
+						signature = root_value_obj.signature		
+						new_root_value_obj = String(signature,message_type)
+						sub_signature_name = signature + "_" + real_value
+						new_root_value_obj.add_extension(sub_signature_name,real_value)
+						self.__values.update({message_type: new_root_value_obj})
+						sub_signature_names.append(sub_signature_name)
+				return sub_signature_names
+
+			else:
+				raise Exception('Set Type is Unsupported.')
+
+
 
 
 
@@ -196,15 +237,17 @@ class Architecture:
 			for c in hpl_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				v = self.__validate_value(c.value,topic)
-				new_condition = Condition("m0",c.operator,v)
-				conditions.append(new_condition)
+				vl = self.__validate_value(c.value,topic)
+				for v in vl:
+					new_condition = Condition("m0",c.operator,v)
+					conditions.append(new_condition)
 
 			#Create Event:
 			event = Event(action,topic,conditions)
 			#Create Observable:
 			t = self.EXISTENCE
 			observable = Observable(t,event)
+			print("Existence Created")
 			return observable
 
 
@@ -223,15 +266,17 @@ class Architecture:
 			for c in hpl_field_conditions:
 				self.__validate_field(c.field,topic) 
 				self.__validate_operator(c.operator)
-				v = self.__validate_value(c.value,topic)
-				new_condition = Condition("m0",c.operator,v)
-				conditions.append(new_condition)
+				vl = self.__validate_value(c.value,topic)
+				for v in vl:
+					new_condition = Condition("m0",c.operator,v)
+					conditions.append(new_condition)
 
 			#Create Event:
 			event = Event(action,topic,conditions)
 			#Create Observable:
 			t = self.ABSENCE
 			observable = Observable(t,event)
+			print("Absence Created")
 			return observable
 
 	def __create_Cause(self,event0,event1):
@@ -248,9 +293,10 @@ class Architecture:
 			for c in hpl0_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				v = self.__validate_value(c.value,topic)
-				new_condition = Condition("m0",c.operator,v)
-				conditions.append(new_condition)
+				vl = self.__validate_value(c.value,topic)
+				for v in vl:
+					new_condition = Condition("m0",c.operator,v)
+					conditions.append(new_condition)
 			event0 = Event(action,topic,conditions,alias=hpl_event0.alias)
 
 			#Behaviour
@@ -261,17 +307,20 @@ class Architecture:
 			for c in hpl1_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				v = self.__validate_value(c.value,topic) 
-				if v == self.REFERENCE:
-					new_condition = Condition("m1",c.operator,"m0")
-				else:
-					new_condition = Condition("m1",c.operator,v)
-				conditions1.append(new_condition)
+				vl = self.__validate_value(c.value,topic) 
+				for v in vl:
+					if v == self.REFERENCE:
+						new_condition = Condition("m1",c.operator,"m0")
+					else:
+						new_condition = Condition("m1",c.operator,v)
+					conditions1.append(new_condition)
+			
 			event1 = Event(action,topic,conditions1)
 
 			#Create Observable
 			t = self.RESPONSE
 			observable = Observable(t,event1,trigger=event0)
+			print("Cause Created")
 			return observable
 
 	def __create_Require(self,event0,event1):
@@ -289,9 +338,11 @@ class Architecture:
 			for c in hpl0_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				v = self.__validate_value(c.value,topic)
-				new_condition = Condition("m1",c.operator,v)
-				conditions.append(new_condition)
+				vl = self.__validate_value(c.value,topic)
+				for v in vl:
+					new_condition = Condition("m1",c.operator,v)
+					conditions.append(new_condition)
+			
 			event1 = Event(action,topic,conditions,alias=hpl_event0.alias)
 
 			#Trigger
@@ -302,17 +353,20 @@ class Architecture:
 			for c in hpl1_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				v = self.__validate_value(c.value,topic)
-				if v==self.REFERENCE:
-					new_condition = Condition("m0",c.operator,"m1")
-				else:
-					new_condition = Condition("m0",c.operator,v)
-				conditions1.append(new_condition)
+				vl = self.__validate_value(c.value,topic)
+				for v in vl:
+					if v==self.REFERENCE:
+						new_condition = Condition("m0",c.operator,"m1")
+					else:
+						new_condition = Condition("m0",c.operator,v)
+					conditions1.append(new_condition)
+			
 			event0 = Event(action,topic,conditions1)
 
 			#Create Observable
 			t = self.REQUIREMENT
 			observable = Observable(t,event1,trigger=event0)
+			print("Require Created")
 			return observable
 
 
