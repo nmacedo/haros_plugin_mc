@@ -12,7 +12,8 @@ from haros_plugin_mc.hpl.parser import hpl_parser
 def configuration_analysis(iface, scope):
 	#Testing
 	
-	
+	# Change scope name to config
+	# Properties will be found on config.hpl_properties (ja com o parser feito)
 	if scope.name == "startup":
 		print("startup configuration ignored.....")
 		return	
