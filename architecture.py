@@ -76,6 +76,7 @@ class Architecture:
 
 	#Hpl_Value , String -> String + self.REFERENCE + Exception
 	def __validate_value(self,hpl_value,topic):	
+		print("will try to validate the valuex")
 		#References
 		if hpl_value.is_reference:
 			self.__validate_field(hpl_value,topic)
@@ -83,6 +84,7 @@ class Architecture:
 		
 		#Literals
 		if hpl_value.is_literal:
+			print("will try to get the topic")
 			topic_obj = self.__topics[topic]
 			message_type = topic_obj.message_type
 			root_value_obj = self.__values[message_type]
@@ -247,7 +249,6 @@ class Architecture:
 			#Create Observable:
 			t = self.EXISTENCE
 			observable = Observable(t,event)
-			print("Existence Created")
 			return observable
 
 
@@ -276,15 +277,14 @@ class Architecture:
 			#Create Observable:
 			t = self.ABSENCE
 			observable = Observable(t,event)
-			print("Absence Created")
 			return observable
 
 	def __create_Cause(self,event0,event1):
+
 		hpl_event0 = self.__extract(event0)	# Trigger
 		hpl_event1 = self.__extract(event1)	# Behaviour
 
 		if hpl_event0 is not None and hpl_event1 is not None:
-
 			# Trigger
 			action = hpl_event0.event_type
 			topic = str(hpl_event0.topic)
@@ -293,7 +293,9 @@ class Architecture:
 			for c in hpl0_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
+				print("Cause Trying1")
 				vl = self.__validate_value(c.value,topic)
+				print("Cause Trying2")
 				for v in vl:
 					new_condition = Condition("m0",c.operator,v)
 					conditions.append(new_condition)
@@ -320,7 +322,6 @@ class Architecture:
 			#Create Observable
 			t = self.RESPONSE
 			observable = Observable(t,event1,trigger=event0)
-			print("Cause Created")
 			return observable
 
 	def __create_Require(self,event0,event1):

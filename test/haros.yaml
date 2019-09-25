@@ -33,6 +33,7 @@ configurations:
                     move_base/cmd_vel: geometry_msgs/Twist
                     cmd_vel: geometry_msgs/Twist
                     supervisor/cmd_vel: geometry_msgs/Twist
+                    
 rules:
     no_conditional_comm:
         name: No Conditional Communications
@@ -125,3 +126,4 @@ rules:
         query: "for n in <configs/nodes>
                 where not 'husky_node' in <n/rt_outlinks/name>
                 return n"
+
