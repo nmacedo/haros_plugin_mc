@@ -123,8 +123,6 @@ class Property:
 	AXIOM = 2
 
 	def __init__(self,pc,t,observable,node=None):
-		if t==self.AXIOM and node is None:
-			raise Exception('Axiom Cannot Be Global')
 		self.pc = pc
 		self.observable = observable
 		self.type = t
@@ -141,6 +139,9 @@ class Property:
 			s = "check prop_" + str(self.pc) + "{\n\t"
 			s += "always { " + self.observable.spec() + " }\n"
 			s += "}\n\n"
+			return s
+		if self.type == self.AXIOM:
+			s = "always { " + self.observable.spec() + " }\n\n"
 			return s
 
 

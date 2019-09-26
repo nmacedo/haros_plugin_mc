@@ -1,3 +1,5 @@
+from interval import *
+from ast import *
 
 class Value:
 	def __init__(self,message_type):
@@ -131,6 +133,19 @@ class Node:
 			map(lambda x: x.rosname.full.replace('/','_') , node.subscribers)
 		self.advertises = \
 			map(lambda x: x.rosname.full.replace('/','_'), node.publishers)
+		self.axioms = []
+
+	def behaviour_facts(self):
+		s = ("fact " + str(self.signature) + "_Behaviour {\n\n\t")
+		for axiom in self.axioms:
+			s +=(axiom.spec() + "\n\t")
+		s += "\n}\n"
+		return s
+	def has_axioms(self):
+		return (self.axioms != [])
+	
+	def add_axioms(self,p):
+		self.axioms = self.axioms + p
 	
 	def spec(self):
 		subscribes = "none" if (self.subscribes == []) else ' + '.join(self.subscribes)

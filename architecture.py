@@ -17,7 +17,6 @@ ros_model = ("abstract sig Node{\n" +
                            "}\n\n" +
                            "abstract sig Value{}\n\n")
 
-
 class Architecture:
 	
 	GLOBAL = 1
@@ -36,11 +35,14 @@ class Architecture:
 		self.__nodes = dict()
 		self.__fields = dict()	#dict(Topic:String)
 		self.__create_structure(nodes,topics)
-		#self.__axioms = self.__create_axioms(nodes)
-		self.__properties = self.__create_properties(properties)  
-		#self.debug_properties() 	
-		#MAYBE PERFORM ARCHITECTURE OPTIMIZATIONS  
+		self.__axioms = self.__create_axioms(nodes)		#TODO
+		self.__properties = self.__create_properties(properties,self.CHECK)
+		#self.prone()			# Prone Architecture  	#TODO
+		
 
+
+	#def prone(self):
+		#pass	
 	# Testing Method
 	def debug_properties(self):
 		props = self.__properties
@@ -76,7 +78,6 @@ class Architecture:
 
 	#Hpl_Value , String -> String + self.REFERENCE + Exception
 	def __validate_value(self,hpl_value,topic):	
-		print("will try to validate the valuex")
 		#References
 		if hpl_value.is_reference:
 			self.__validate_field(hpl_value,topic)
@@ -84,7 +85,6 @@ class Architecture:
 		
 		#Literals
 		if hpl_value.is_literal:
-			print("will try to get the topic")
 			topic_obj = self.__topics[topic]
 			message_type = topic_obj.message_type
 			root_value_obj = self.__values[message_type]
@@ -132,14 +132,16 @@ class Architecture:
 			topic_obj = self.__topics[topic]
 			message_type = topic_obj.message_type
 			root_value_obj = self.__values[message_type]
+			
 
 			lower = hpl_value.lower_bound
 			upper = hpl_value.upper_bound
+			
 			if lower.is_reference or upper.is_reference:
+				print("Unsupported Use of References.")
 				raise Exception ('Unsupported Use of References.')
 			lower_value = lower.value
 			upper_value = upper.value
-
 			if isinstance(root_value_obj,Num):
 				sub_signature_name = (root_value_obj.signature + "_" + str(lower_value) + "_" +
 									str(upper_value))
@@ -149,11 +151,11 @@ class Architecture:
 			else:
 				signature = root_value_obj.signature
 				new_root_value_obj = Num(signature,message_type)
-				sub_signature_name = (root_value_obj.sugnature + "_" + str(lower_value) + "_" +
+				sub_signature_name = (root_value_obj.signature + "_" + str(lower_value) + "_" +
 									str(upper_value))
 				new_root_value_obj.add_extension(sub_signature_name,
 												interval([lower_value,upper_value]))
-				self.values.update({message_type: new_root_value_obj})
+				self.__values.update({message_type: new_root_value_obj})
 				return [sub_signature_name]
 			
 
@@ -280,7 +282,6 @@ class Architecture:
 			return observable
 
 	def __create_Cause(self,event0,event1):
-
 		hpl_event0 = self.__extract(event0)	# Trigger
 		hpl_event1 = self.__extract(event1)	# Behaviour
 
@@ -293,9 +294,7 @@ class Architecture:
 			for c in hpl0_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				print("Cause Trying1")
 				vl = self.__validate_value(c.value,topic)
-				print("Cause Trying2")
 				for v in vl:
 					new_condition = Condition("m0",c.operator,v)
 					conditions.append(new_condition)
@@ -310,6 +309,7 @@ class Architecture:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
 				vl = self.__validate_value(c.value,topic) 
+
 				for v in vl:
 					if v == self.REFERENCE:
 						new_condition = Condition("m1",c.operator,"m0")
@@ -325,7 +325,6 @@ class Architecture:
 			return observable
 
 	def __create_Require(self,event0,event1):
-	
 		hpl_event0 = self.__extract(event0) #Behaviour
 		hpl_event1 = self.__extract(event1) #Trigger
 
@@ -367,7 +366,6 @@ class Architecture:
 			#Create Observable
 			t = self.REQUIREMENT
 			observable = Observable(t,event1,trigger=event0)
-			print("Require Created")
 			return observable
 
 
@@ -375,40 +373,40 @@ class Architecture:
 	def __conversion(self,p,t=None):
 		scope_type = p.scope.scope_type
 		if scope_type == self.GLOBAL:
-			if t==self.CHECK:			
+			if t==self.CHECK or t==self.AXIOM:		
 				o = p.observable 
 				pattern = o.pattern		
-
 				if pattern == self.EXISTENCE:
 					event = o.behaviour
 					observable = self.__create_Existence(event)
-					p = Property(self.pc,self.CHECK,observable)
-					self.pc = self.pc + 1	## ++ ?
+					p = Property(self.pc,t,observable)
+					if t == self.CHECK:
+						self.pc = self.pc + 1
 					return p				
 				if pattern == self.ABSENCE: 	  
 					event = o.behaviour
 					observable = self.__create_Absence(event)
-					p = Property(self.pc,self.CHECK,observable)
-					self.pc = self.pc + 1
+					p = Property(self.pc,t,observable)
+					if t == self.CHECK:
+						self.pc = self.pc + 1
 					return p
 
 				if pattern == self.RESPONSE:	#Event Causes Event
 					event1 = o.behaviour
-					event0 = o.trigger
+					event0 = o.trigger	
 					observable = self.__create_Cause(event0,event1)	
-					p = Property(self.pc,self.CHECK,observable)
-					self.pc = self.pc + 1
+					p = Property(self.pc,t,observable)
+					if t == self.CHECK:
+						self.pc = self.pc + 1
 					return p				
 				if pattern == self.REQUIREMENT: #Event Requires Event
 					event0 = o.behaviour
 					event1 = o.trigger
 					observable = self.__create_Require(event0,event1)
-					p = Property(self.pc,self.CHECK,observable)
-					self.pc = self.pc + 1
+					p = Property(self.pc,t,observable)
+					if t == self.CHECK:
+						self.pc = self.pc + 1
 					return p
-
-			elif t==self.AXIOM:
-				pass
 			else: 
 				print("Property Type Undeclared")
 				raise Exception('Property Type Undeclared.') 				
@@ -418,17 +416,27 @@ class Architecture:
 		
 
 	# [HplProperty] -> [Property] + Exception
-	def __create_properties(self,properties):
+	def __create_properties(self,properties,t):
 		if properties is None:
 			print("Properties are None...")
 			return []
 		else:
-			return map ((lambda x : self.__conversion(x,t=self.CHECK)) , properties)
+			return map ((lambda x : self.__conversion(x,t)) , properties)
+
+	def __create_axioms(self,nodes):
+		for resource in nodes:
+			node = resource.node
+			properties = node.hpl_properties
+			if properties != []:
+				pl = self.__create_properties(properties,self.AXIOM)
+				node_obj = self.__nodes[resource.rosname.full]
+				node_obj.add_axioms(pl)
 
 
 
 
 	def spec(self):
+		axioms = False
 		spec = ros_model
 		spec += "------- Values -------\n\n"
 		for k in self.__values.keys():
@@ -442,10 +450,19 @@ class Architecture:
 		for k in self.__nodes.keys():
 			node_obj = self.__nodes[k]
 			spec += node_obj.spec()
-		#ADD behaviour axioms
-		#ADD properties to check
-		spec += "\n------- Properties -------\n\n"
-		for p in self.__properties:
-			spec += p.spec()
+			if node_obj.has_axioms():
+				axioms = True
+
+		if axioms == True:
+			spec += "\n------- Behaviour -------\n\n"
+			for k in self.__nodes.keys():
+				node_obj = self.__nodes[k]
+				if node_obj.has_axioms():
+					spec += node_obj.behaviour_facts()
+
+		if self.__properties != []:
+			spec += "\n------- Properties -------\n\n"
+			for p in self.__properties:
+				spec += p.spec()
 
 		return spec

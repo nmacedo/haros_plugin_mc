@@ -26,6 +26,9 @@ def configuration_analysis(iface, scope):
  	#hp = hpl_parser()
 	#ps = [hp.parse(prop1),hp.parse(prop2),hp.parse(prop3),hp.parse(prop4),hp.parse(prop5),hp.parse(prop6),hp.parse(prop7),hp.parse(prop8)]
 
+	if scope.nodes.__len__() <= 1:	# Node Configurations
+		return 
+
 
 	interface = facade(scope.name, scope.nodes, scope.topics,properties=scope.hpl_properties)
 
