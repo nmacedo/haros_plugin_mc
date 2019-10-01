@@ -8,11 +8,10 @@ class facade(object):
 		self.architecture = Architecture(nodes,topics,properties=properties)
 		self.model = self.arch_spec()
 
-		
-		with open('/tmp/electrum_model.ele',"w") as f:
+		with open('/tmp/model.ele',"w") as f:
 			f.write(self.model)
-	
-	
+		print(self.model)
+
 	def arch_spec(self):
 		module_name = "module " + self.configuration_name + "\n\n"
 		return (module_name + 

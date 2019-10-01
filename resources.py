@@ -129,10 +129,19 @@ class Topic:
 class Node:
 	def __init__(self,node):
 		self.signature = node.rosname.full.replace('/','_')
-		self.subscribes = \
-			map(lambda x: x.rosname.full.replace('/','_') , node.subscribers)
-		self.advertises = \
-			map(lambda x: x.rosname.full.replace('/','_'), node.publishers)
+			
+		subscribers = node.subscribers
+		subscribers = map(lambda x: x.rosname.full.replace('/','_') , subscribers)
+		subscribers = map(lambda x: x.replace('~',str(self.signature)) , subscribers)
+		subscribers = filter(lambda x: not x.__contains__("?"), subscribers)
+		self.subscribes = subscribers
+
+		publishers = node.publishers
+		publishers = map(lambda x: x.rosname.full.replace('/','_') , publishers)
+		publishers = map(lambda x: x.replace('~',self.signature) , publishers)
+		publishers = filter(lambda x: not x.__contains__("?"), publishers)
+		self.advertises = publishers
+
 		self.axioms = []
 
 	def behaviour_facts(self):
@@ -151,7 +160,7 @@ class Node:
 		subscribes = "none" if (self.subscribes == []) else ' + '.join(self.subscribes)
 		advertises = "none" if (self.advertises == []) else ' + '.join(self.advertises)
           	declaration = ("one sig " +
-				self.signature + " extends Node{}\n" +
+				self.signature + " extends Node{}{\n" +
 				"\tsubscribes = " + subscribes +
 				"\n\tadvertises = " + advertises + "\n}\n\n") 
 		return declaration

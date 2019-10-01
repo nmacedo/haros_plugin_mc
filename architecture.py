@@ -53,13 +53,25 @@ class Architecture:
 			++count
 
 	def __create_structure(self,nodes,topics):
+		
 		for t in topics:
+			name = str(t.rosname.full)
+			
+			if name.__contains__('?') == True:			#Break Conditions
+				continue
+
 			topic_obj = Topic(t) 
 			self.__topics.update({t.rosname.full: topic_obj})
 			if t.type not in self.__values.keys():
 				value_obj = Value(t.type)
 				self.__values.update({t.type:value_obj})
-		for n in nodes:			
+		
+		for n in nodes:	
+			name = str(n.rosname.full)	
+			
+			if name.__contains__('?'):			#Break Conditions
+				continue	
+			
 			node_obj = Node(n)			
 			self.__nodes.update({n.rosname.full : node_obj})
 
@@ -93,14 +105,14 @@ class Architecture:
 			real_value = hpl_value.value
 			if isinstance(real_value, (int,long,float)):
 				if isinstance(root_value_obj,Num):
-					sub_signature_name = root_value_obj.signature + "_" + str(real_value)
+					sub_signature_name = root_value_obj.signature + "_" + str(int(real_value))
 					root_value_obj.add_extension(sub_signature_name,
 												interval(real_value))
 					return [sub_signature_name]
 				else:
 					signature = root_value_obj.signature		
 					new_root_value_obj = Num(signature,message_type)
-					sub_signature_name = signature + "_" + str(real_value)
+					sub_signature_name = signature + "_" + str(int(real_value))
 					new_root_value_obj.add_extension(sub_signature_name,
 													interval(real_value))
 					self.__values.update({message_type: new_root_value_obj})
@@ -111,10 +123,11 @@ class Architecture:
 				print("Boolean Values Are Unsupported.")
 				raise Exception ('Boolean Values Are Unsupported.')
 		
+			# UNTESTED PATH
 			#Literal Strings
-			real_value = str(hpl_value.value)		 ## String in String
-			real_value = real_value.replace('\"','') ## String
 			if isinstance(real_value, str):
+				real_value = str(hpl_value.value)		 ## String in String
+				real_value = real_value.replace('\"','') ## String
 				if isinstance(root_value_obj,String):
 					sub_signature_name = root_value_obj.signature + "_" + real_value
 					root_value_obj.add_extension(sub_signature_name,real_value)
@@ -143,16 +156,16 @@ class Architecture:
 			lower_value = lower.value
 			upper_value = upper.value
 			if isinstance(root_value_obj,Num):
-				sub_signature_name = (root_value_obj.signature + "_" + str(lower_value) + "_" +
-									str(upper_value))
+				sub_signature_name = (root_value_obj.signature + "_" + str(int(lower_value)) + "_" +
+									str(int(upper_value)))
 				root_value_obj.add_extension(sub_signature_name,
 											interval([lower_value,upper_value]))
 				return [sub_signature_name]
 			else:
 				signature = root_value_obj.signature
 				new_root_value_obj = Num(signature,message_type)
-				sub_signature_name = (root_value_obj.signature + "_" + str(lower_value) + "_" +
-									str(upper_value))
+				sub_signature_name = (root_value_obj.signature + "_" + str(int(lower_value)) + "_" +
+									str(int(upper_value)))
 				new_root_value_obj.add_extension(sub_signature_name,
 												interval([lower_value,upper_value]))
 				self.__values.update({message_type: new_root_value_obj})
@@ -204,8 +217,6 @@ class Architecture:
 
 			else:
 				raise Exception('Set Type is Unsupported.')
-
-
 
 
 

@@ -72,8 +72,8 @@ class Observable:	#Trocar nomes de behaviour e Observable
 		return s
 
 	def spec(self): 
-		if self.pattern == self.EXISTENCE:
-			s = "some m0: " + "topic."+self.behaviour.topic.replace('/','_') +" | (" + self.behaviour.spec() + ")"
+		if self.pattern == self.EXISTENCE: #globally some ==> always eventually
+			s = "eventually some m0: " + "topic."+self.behaviour.topic.replace('/','_') +" | (" + self.behaviour.spec() + ")"
 			return s
 		if self.pattern == self.ABSENCE:
 			s = "no m0: " + "topic."+self.behaviour.topic.replace('/','_') +" | (" + self.behaviour.spec() + ")"
@@ -92,7 +92,7 @@ class Observable:	#Trocar nomes de behaviour e Observable
 					s = ("all m0: topic." +self.trigger.topic.replace('/','_') +
 						" | (" + self.trigger.spec() + ")")
 					s += (" \n\t\t\timplies eventually (some m1: topic."+self.behaviour.topic.replace('/','_') +
-						 " | (" + self.behaviour.spec() + ")")
+						 " | (" + self.behaviour.spec() + "))")
 					return s
 		if self.pattern == self.REQUIREMENT:
 			if self.trigger is not None:
@@ -108,7 +108,7 @@ class Observable:	#Trocar nomes de behaviour e Observable
 					s = ("all m1: topic." +self.behaviour.topic.replace('/','_') +
 						" | (" + self.behaviour.spec() + ")")
 					s += (" \n\t\t\timplies previous once (some m0: topic."+self.trigger.topic.replace('/','_') +
-						 " | (" + self.trigger.spec() + ")")
+						 " | (" + self.trigger.spec() + "))")
 					return s
 					
 
