@@ -28,11 +28,12 @@ class Event:
 	
 	PUBLISH = 1
 	
-	def __init__(self,action,topic,conditions,alias=None):
+	def __init__(self,action,topic,conditions,is_set,alias=None):
 		self.action = action
 		self.topic = topic
 		self.conditions = conditions     #[Condition]
 		self.alias = alias
+		self.relation = " and " if is_set == False else " or "
 
 	# Test Method
 	def debug_print(self):
@@ -44,10 +45,8 @@ class Event:
 		return s
 
 	def spec(self):
-		s = " or ".join(map(lambda x: x.spec(), self.conditions))
+		s = self.relation.join(map(lambda x: x.spec(), self.conditions))
 		return s
-
-
 
 
 class Observable:	#Trocar nomes de behaviour e Observable
@@ -73,49 +72,45 @@ class Observable:	#Trocar nomes de behaviour e Observable
 
 	def spec(self): 
 		if self.pattern == self.EXISTENCE: #globally some ==> always eventually
-			s = "eventually some m0: " + "topic."+self.behaviour.topic.replace('/','_') +" | (" + self.behaviour.spec() + ")"
+			s = ("some (Node.outbox & topic."+self.behaviour.topic.replace('/','_')+")" +
+				"implies (some m0: Node.outbox & " + "topic."+self.behaviour.topic.replace('/','_') +" | (" + self.behaviour.spec() + "))")
 			return s
 		if self.pattern == self.ABSENCE:
-			s = "no m0: " + "topic."+self.behaviour.topic.replace('/','_') +" | (" + self.behaviour.spec() + ")"
+			s = "no m0: Node.outbox & " + "topic."+self.behaviour.topic.replace('/','_') +" | (" + self.behaviour.spec() + ")"
 			return s
 		if self.pattern == self.RESPONSE:
 			if self.trigger is not None:
 				if self.trigger.alias is None:
-					s = ("(some m0:" + "topic."+self.trigger.topic.replace('/','_') +
+					s = ("(some m0: Node.inbox & " + "topic."+self.trigger.topic.replace('/','_') +
 						" | (" + self.trigger.spec() + "))")
-					s += (" \n\t\t\timplies eventually (some m1 : topic."+self.behaviour.topic.replace('/','_') +
+					s += (" \n\t\t\timplies eventually (some m1 : Node.outbox &  topic."+self.behaviour.topic.replace('/','_') +
 						" | (" + self.behaviour.spec() + "))")
 					return s
 				else:
 					# There is an Alias
 					# 'all' pattern must be writen 
-					s = ("all m0: topic." +self.trigger.topic.replace('/','_') +
+					s = ("all m0: Node.inbox & topic." +self.trigger.topic.replace('/','_') +
 						" | (" + self.trigger.spec() + ")")
-					s += (" \n\t\t\timplies eventually (some m1: topic."+self.behaviour.topic.replace('/','_') +
+					s += (" \n\t\t\timplies eventually (some m1: Node.outbox & topic."+self.behaviour.topic.replace('/','_') +
 						 " | (" + self.behaviour.spec() + "))")
 					return s
 		if self.pattern == self.REQUIREMENT:
 			if self.trigger is not None:
 				if self.behaviour.alias is None:
-					s = ("(some m1:" + "topic."+self.behaviour.topic.replace('/','_') +
+					s = ("(some m1: Node.outbox & " + "topic."+self.behaviour.topic.replace('/','_') +
 						" | (" + self.behaviour.spec() + "))")
-					s += (" \n\t\t\timplies previous once (some m0 : topic."+self.trigger.topic.replace('/','_') +
+					s += (" \n\t\t\timplies previous once (some m0: Node.inbox & topic."+self.trigger.topic.replace('/','_') +
 						" | (" + self.trigger.spec() + "))")
 					return s
 				else:
 					# There is an Alias
 					# 'all' pattern must be writen 
-					s = ("all m1: topic." +self.behaviour.topic.replace('/','_') +
+					s = ("all m1: Node.outbox &  topic." +self.behaviour.topic.replace('/','_') +
 						" | (" + self.behaviour.spec() + ")")
-					s += (" \n\t\t\timplies previous once (some m0: topic."+self.trigger.topic.replace('/','_') +
+					s += (" \n\t\t\timplies previous once (some m0: Node.inbox & topic."+self.trigger.topic.replace('/','_') +
 						 " | (" + self.trigger.spec() + "))")
 					return s
-					
-
-
-
-		
-
+			
 
 class Property:
 	

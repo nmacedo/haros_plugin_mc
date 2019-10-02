@@ -4,18 +4,45 @@ from interval import *
 from ast import *
 from resources import *
 
-ros_model = ("abstract sig Node{\n" +
-                           "\tsubscribes: set Topic,\n" +
-                           "\tadvertises: set Topic,\n" +
-                           "\tinbox: set Message,\n" +
-                           "\toutbox: set Message\n" +
-                           "}\n\n" +
-                           "abstract sig Topic{}\n\n" +
-                           "sig Message{\n" +
-                           "\ttopic: one Topic,\n" +
-                           "\tvalue: one Value\n"+
-                           "}\n\n" +
-                           "abstract sig Value{}\n\n")
+
+ros_model = ("abstract sig Node {\n" +
+			"\tsubscribes: set Topic,\n" +
+			"\tadvertises: set Topic,\n" +
+			"\tvar inbox : set Message,\n" +
+			"\tvar outbox : set Message\n" +
+			"}\n\n" +
+			"abstract sig Topic {}\n\n" +
+			"sig Message {\n" +
+			"\ttopic : one Topic,\n" +	
+			"\tvalue : one  Value\n" +
+			"}\n\n" +
+			"abstract sig Value {}\n\n" +
+			"fact Messages {\n\n" +
+			"\tall n : Node | always {\n"			
+			"\t\tn.inbox.topic in n.subscribes\n" +
+			"\t\tn.outbox.topic in n.advertises\n" +
+			"\t}\n" +
+			"\tall m : Message, t: m.topic | always {\n" + 
+			"\t\tm in Node.outbox implies (all n : subscribes.(m.topic) | eventually (m in n.inbox and m.topic = t))\n" +
+			"\t}\n" +
+			"\talways {\n" +
+			"\t\tall m : Node.outbox | eventually m not in Node.outbox\n" +
+			"\t}\n" 
+			"\tall m : Message, t: m.topic | always{\n" +	
+			"\t\tm in Node.inbox implies (some n : advertises.(m.topic) | previous once (m in n.outbox and m.topic = t))\n" + 
+			"\t}\n" +
+			"\talways{\n" +
+			"\t\tall n1: Node, m: n1.inbox |\n" + 
+			"\t\t\tprevious once (some n0: advertises.(m.topic), m0: n0.outbox |  (m0 = m) and (m0.topic = m.topic))\n"+ 
+			"\t}\n\n"+
+			"}\n\n" +
+			"fact init {\n" +
+			"\tno (outbox + inbox)\n" +
+			"}\n\n")
+
+
+
+                           
 
 class Architecture:
 	
@@ -37,12 +64,65 @@ class Architecture:
 		self.__create_structure(nodes,topics)
 		self.__axioms = self.__create_axioms(nodes)		#TODO
 		self.__properties = self.__create_properties(properties,self.CHECK)
-		#self.prone()			# Prone Architecture  	#TODO
+		self.prune_structure()		
 		
 
+	def delete_topic(self,t):
+		# Maintaining node coherency
+		for k in self.__nodes.keys():
+			node = self.__nodes[k]
+			if t.signature in node.subscribes:
+				node.subscribes.remove(t.signature)
+			if t.signature in node.advertises:
+				node.advertises.remove(t.signature)
+		# Deleting Topic Object
+		mt = t.name
+		del self.__topics[mt]
+		return
 
-	#def prone(self):
-		#pass	
+	def delete_value(self,v):
+		self.__values.pop(v)
+
+	def delete_node(self,k):
+		self.__nodes.pop(k)
+
+
+	def prune_structure(self):
+		subscribers = []
+		advertises = []
+		for k in self.__nodes.keys():
+			node = self.__nodes[k]
+			subscribers = subscribers + node.subscribes
+			advertises = advertises + node.advertises
+
+		# Delete Dead Topics
+		for k in self.__topics.keys():
+			# Extra condition (if the topic is used in property or axiom, 'continue')
+			topic = self.__topics[k]
+			topic_name = topic.signature
+			if (topic_name not in subscribers) or (topic_name not in advertises): 
+				self.delete_topic(topic)
+
+	
+		# Delete Dead Values
+		values = self.__values.keys()
+		for k in self.__topics.keys():
+			mt = self.__topics[k].message_type
+			if mt in values:
+				values.remove(mt)
+
+		dead_values = values
+		for v in dead_values:
+			self.delete_value(v)
+		# Delete Dead Nodes
+		for k in self.__nodes.keys():
+			node = self.__nodes[k]
+			if node.subscribes == [] and node.advertises == []:
+				self.delete_node(k)
+		
+		return
+
+			
 	# Testing Method
 	def debug_properties(self):
 		props = self.__properties
@@ -52,8 +132,7 @@ class Architecture:
 			print(p.debug_print())
 			++count
 
-	def __create_structure(self,nodes,topics):
-		
+	def __create_structure(self,nodes,topics):	
 		for t in topics:
 			name = str(t.rosname.full)
 			
@@ -67,13 +146,12 @@ class Architecture:
 				self.__values.update({t.type:value_obj})
 		
 		for n in nodes:	
-			name = str(n.rosname.full)	
-			
+			name = str(n.rosname.full)			
 			if name.__contains__('?'):			#Break Conditions
-				continue	
-			
+				continue			
 			node_obj = Node(n)			
 			self.__nodes.update({n.rosname.full : node_obj})
+
 
 	#HplFieldReference, String -> Boolean + Exception
 	def __validate_field(self,f,topic):
@@ -90,10 +168,11 @@ class Architecture:
 
 	#Hpl_Value , String -> String + self.REFERENCE + Exception
 	def __validate_value(self,hpl_value,topic):	
+		is_set = False
 		#References
 		if hpl_value.is_reference:
 			self.__validate_field(hpl_value,topic)
-			return [self.REFERENCE]
+			return is_set, [self.REFERENCE]
 		
 		#Literals
 		if hpl_value.is_literal:
@@ -108,7 +187,7 @@ class Architecture:
 					sub_signature_name = root_value_obj.signature + "_" + str(int(real_value))
 					root_value_obj.add_extension(sub_signature_name,
 												interval(real_value))
-					return [sub_signature_name]
+					return is_set, [sub_signature_name]
 				else:
 					signature = root_value_obj.signature		
 					new_root_value_obj = Num(signature,message_type)
@@ -116,7 +195,7 @@ class Architecture:
 					new_root_value_obj.add_extension(sub_signature_name,
 													interval(real_value))
 					self.__values.update({message_type: new_root_value_obj})
-					return [sub_signature_name]
+					return is_set, [sub_signature_name]
 
 			#Literal Booleans
 			if isinstance(real_value, bool):
@@ -131,14 +210,14 @@ class Architecture:
 				if isinstance(root_value_obj,String):
 					sub_signature_name = root_value_obj.signature + "_" + real_value
 					root_value_obj.add_extension(sub_signature_name,real_value)
-					return [sub_signature_name]
+					return is_set, [sub_signature_name]
 				else:
 					signature = root_value_obj.signature		
 					new_root_value_obj = String(signature,message_type)
 					sub_signature_name = signature + "_" + real_value
 					new_root_value_obj.add_extension(sub_signature_name,real_value)
 					self.__values.update({message_type: new_root_value_obj})
-					return [sub_signature_name]
+					return is_set, [sub_signature_name]
 
 		# Range
 		if hpl_value.is_range:
@@ -160,7 +239,7 @@ class Architecture:
 									str(int(upper_value)))
 				root_value_obj.add_extension(sub_signature_name,
 											interval([lower_value,upper_value]))
-				return [sub_signature_name]
+				return is_set, [sub_signature_name]
 			else:
 				signature = root_value_obj.signature
 				new_root_value_obj = Num(signature,message_type)
@@ -169,7 +248,7 @@ class Architecture:
 				new_root_value_obj.add_extension(sub_signature_name,
 												interval([lower_value,upper_value]))
 				self.__values.update({message_type: new_root_value_obj})
-				return [sub_signature_name]
+				return is_set, [sub_signature_name]
 			
 
 		#Sets
@@ -196,7 +275,7 @@ class Architecture:
 						self.__values.update({message_type: new_root_value_obj})
 						sub_signature_names.append(sub_signature_name)
 
-				return sub_signature_names
+				return True, sub_signature_names
 
 			elif strings:
 				sub_signature_names = []
@@ -213,7 +292,7 @@ class Architecture:
 						new_root_value_obj.add_extension(sub_signature_name,real_value)
 						self.__values.update({message_type: new_root_value_obj})
 						sub_signature_names.append(sub_signature_name)
-				return sub_signature_names
+				return True, sub_signature_names
 
 			else:
 				raise Exception('Set Type is Unsupported.')
@@ -252,13 +331,13 @@ class Architecture:
 			for c in hpl_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				vl = self.__validate_value(c.value,topic)
+				is_set, vl = self.__validate_value(c.value,topic)
 				for v in vl:
 					new_condition = Condition("m0",c.operator,v)
 					conditions.append(new_condition)
 
 			#Create Event:
-			event = Event(action,topic,conditions)
+			event = Event(action,topic,conditions,is_set)
 			#Create Observable:
 			t = self.EXISTENCE
 			observable = Observable(t,event)
@@ -280,13 +359,14 @@ class Architecture:
 			for c in hpl_field_conditions:
 				self.__validate_field(c.field,topic) 
 				self.__validate_operator(c.operator)
-				vl = self.__validate_value(c.value,topic)
+				is_set, vl = self.__validate_value(c.value,topic)
 				for v in vl:
 					new_condition = Condition("m0",c.operator,v)
 					conditions.append(new_condition)
 
 			#Create Event:
-			event = Event(action,topic,conditions)
+			is_set = not is_set		# Because the Absence formula needs to be negated
+			event = Event(action,topic,conditions,is_set)
 			#Create Observable:
 			t = self.ABSENCE
 			observable = Observable(t,event)
@@ -305,11 +385,11 @@ class Architecture:
 			for c in hpl0_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				vl = self.__validate_value(c.value,topic)
+				is_set, vl = self.__validate_value(c.value,topic)
 				for v in vl:
 					new_condition = Condition("m0",c.operator,v)
 					conditions.append(new_condition)
-			event0 = Event(action,topic,conditions,alias=hpl_event0.alias)
+			event0 = Event(action,topic,conditions,is_set,alias=hpl_event0.alias)
 
 			#Behaviour
 			action = hpl_event1.event_type
@@ -319,7 +399,7 @@ class Architecture:
 			for c in hpl1_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				vl = self.__validate_value(c.value,topic) 
+				is_set, vl = self.__validate_value(c.value,topic) 
 
 				for v in vl:
 					if v == self.REFERENCE:
@@ -328,7 +408,7 @@ class Architecture:
 						new_condition = Condition("m1",c.operator,v)
 					conditions1.append(new_condition)
 			
-			event1 = Event(action,topic,conditions1)
+			event1 = Event(action,topic,conditions1,is_set)
 
 			#Create Observable
 			t = self.RESPONSE
@@ -349,12 +429,12 @@ class Architecture:
 			for c in hpl0_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				vl = self.__validate_value(c.value,topic)
+				is_set, vl = self.__validate_value(c.value,topic)
 				for v in vl:
 					new_condition = Condition("m1",c.operator,v)
 					conditions.append(new_condition)
 			
-			event1 = Event(action,topic,conditions,alias=hpl_event0.alias)
+			event1 = Event(action,topic,conditions,is_set,alias=hpl_event0.alias)
 
 			#Trigger
 			action = hpl_event1.event_type
@@ -364,7 +444,7 @@ class Architecture:
 			for c in hpl1_field_conditions:
 				self.__validate_field(c.field,topic)
 				self.__validate_operator(c.operator)
-				vl = self.__validate_value(c.value,topic)
+				is_set, vl = self.__validate_value(c.value,topic)
 				for v in vl:
 					if v==self.REFERENCE:
 						new_condition = Condition("m0",c.operator,"m1")
@@ -372,7 +452,7 @@ class Architecture:
 						new_condition = Condition("m0",c.operator,v)
 					conditions1.append(new_condition)
 			
-			event0 = Event(action,topic,conditions1)
+			event0 = Event(action,topic,conditions1,is_set)
 
 			#Create Observable
 			t = self.REQUIREMENT

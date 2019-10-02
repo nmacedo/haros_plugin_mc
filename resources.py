@@ -114,7 +114,7 @@ class Topic:
 	def __init__(self,topic):
 		self.signature = topic.rosname.full.replace('/','_')
 		self.signature = self.signature.replace('?','UNKNOWN')
-		self.name = topic
+		self.name = topic.rosname.full
 		self.value = topic.type.replace('/','_')
 		self.message_type = topic.type
 	
