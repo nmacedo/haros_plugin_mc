@@ -14,6 +14,3 @@ def configuration_analysis(iface, scope):
 		return 
 	
 	interface = facade(scope.name, scope.nodes, scope.topics,properties=scope.hpl_properties)
-
- 
-

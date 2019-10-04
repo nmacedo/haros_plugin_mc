@@ -64,8 +64,26 @@ class Architecture:
 		self.__create_structure(nodes,topics)
 		self.__axioms = self.__create_axioms(nodes)		#TODO
 		self.__properties = self.__create_properties(properties,self.CHECK)
-		self.prune_structure()		
+		self.prune_structure()
+		self.value_scope , self.message_scope , self.time_scope = self.__compute_scopes()
 		
+
+	def __compute_time_min_scope(self):
+		# reduce architecture to graph
+		#compute longest path
+		longest_path = 10 # Example
+		return longest_path
+
+
+
+
+	def __compute_scopes(self):
+		min_value_scope = len(self.__values)
+		min_message_scope = len(self.__topics) + 2
+		min_time_scope = self.__compute_time_min_scope()
+		return min_value_scope , min_message_scope, min_time_scope
+
+	#TODO
 
 	def delete_topic(self,t):
 		# Maintaining node coherency
@@ -415,12 +433,27 @@ class Architecture:
 			observable = Observable(t,event1,trigger=event0)
 			return observable
 
+
+	def __extract_triggers(self,ecd):
+
+		if len(ecd.chains) == 2:
+			first_event = ecd.chains[0].events[0]
+			second_event = ecd.chains[1].events[0]
+			events = [first_event,second_event]
+			return events
+		elif len(ecd.chains) == 1:
+			events = [ecd.chains[0].events[0]]
+			return events
+		else:
+			return None
+
+	# Refactoring
 	def __create_Require(self,event0,event1):
 		hpl_event0 = self.__extract(event0) #Behaviour
-		hpl_event1 = self.__extract(event1) #Trigger
 
-		if hpl_event0 is not None and hpl_event1 is not None:
-			
+		triggers = self.__extract_triggers(event1)
+
+		if hpl_event0 is not None and triggers is not None:
 			#Behaviour
 			action = hpl_event0.event_type
 			topic = str(hpl_event0.topic)
@@ -436,27 +469,34 @@ class Architecture:
 			
 			event1 = Event(action,topic,conditions,is_set,alias=hpl_event0.alias)
 
+			trigger_events = []
+			count = 1
+			for t in triggers:
+				count = count + 1
+				hpl_event1 = t
+
 			#Trigger
-			action = hpl_event1.event_type
-			topic = str(hpl_event1.topic)
-			hpl1_field_conditions = hpl_event1.msg_filter.conditions
-			conditions1=[]
-			for c in hpl1_field_conditions:
-				self.__validate_field(c.field,topic)
-				self.__validate_operator(c.operator)
-				is_set, vl = self.__validate_value(c.value,topic)
-				for v in vl:
-					if v==self.REFERENCE:
-						new_condition = Condition("m0",c.operator,"m1")
-					else:
-						new_condition = Condition("m0",c.operator,v)
-					conditions1.append(new_condition)
+				action = hpl_event1.event_type
+				topic = str(hpl_event1.topic)
+				hpl1_field_conditions = hpl_event1.msg_filter.conditions
+				conditions1=[]
+				for c in hpl1_field_conditions:
+					self.__validate_field(c.field,topic)
+					self.__validate_operator(c.operator)
+					is_set, vl = self.__validate_value(c.value,topic)
+					for v in vl:
+						if v==self.REFERENCE:
+							new_condition = Condition("m0",c.operator,"m1")
+						else:
+							new_condition = Condition("m0",c.operator,v)
+						conditions1.append(new_condition)
 			
-			event0 = Event(action,topic,conditions1,is_set)
+				event0 = Event(action,topic,conditions1,is_set)
+				trigger_events.append(event0)
 
 			#Create Observable
 			t = self.REQUIREMENT
-			observable = Observable(t,event1,trigger=event0)
+			observable = Observable(t,event1,trigger=trigger_events)
 			return observable
 
 
@@ -554,6 +594,8 @@ class Architecture:
 		if self.__properties != []:
 			spec += "\n------- Properties -------\n\n"
 			for p in self.__properties:
-				spec += p.spec()
+				spec += (p.spec() + "for 4 but exactly " + 
+						str(self.value_scope) + " Value, " + str(self.message_scope) + " Message, exactly " + 
+						str(self.time_scope) +" Time\n\n")
 
 		return spec

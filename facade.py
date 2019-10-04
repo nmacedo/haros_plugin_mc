@@ -6,11 +6,10 @@ class facade(object):
 	def __init__(self,name,nodes,topics,properties=None):
 		self.configuration_name = name
 		self.architecture = Architecture(nodes,topics,properties=properties)
-		self.model = self.arch_spec()
-
+		# Writting model in /tmp folder
 		with open('/tmp/model.ele',"w") as f:
-			f.write(self.model)
-		print(self.model)
+			f.write(self.arch_spec())
+
 
 	def arch_spec(self):
 		module_name = "module " + self.configuration_name + "\n\n"

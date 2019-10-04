@@ -94,21 +94,31 @@ class Observable:	#Trocar nomes de behaviour e Observable
 					s += (" \n\t\t\timplies eventually (some m1: Node.outbox & topic."+self.behaviour.topic.replace('/','_') +
 						 " | (" + self.behaviour.spec() + "))")
 					return s
+		# Extended to receive trigger event chains
 		if self.pattern == self.REQUIREMENT:
 			if self.trigger is not None:
+				trigger_spec = ""
+				
+				if isinstance(self.trigger,list):
+					trigger_specs = []
+					for t in self.trigger:
+						spec = "(some m0: Node.inbox & topic."+t.topic.replace('/','_')+ "| (" + t.spec() + "))"
+						trigger_specs.append(spec)
+					trigger_spec = " or ".join(trigger_specs)
+				else:
+					trigger_spec = "(some m0: Node.inbox & topic."+self.trigger.topic.replace('/','_')+ "| (" + self.trigger.spec() + "))"
+
 				if self.behaviour.alias is None:
 					s = ("(some m1: Node.outbox & " + "topic."+self.behaviour.topic.replace('/','_') +
 						" | (" + self.behaviour.spec() + "))")
-					s += (" \n\t\t\timplies previous once (some m0: Node.inbox & topic."+self.trigger.topic.replace('/','_') +
-						" | (" + self.trigger.spec() + "))")
+					s += (" \n\t\t\timplies previous once ("+trigger_spec+")")
 					return s
 				else:
 					# There is an Alias
 					# 'all' pattern must be writen 
 					s = ("all m1: Node.outbox &  topic." +self.behaviour.topic.replace('/','_') +
 						" | (" + self.behaviour.spec() + ")")
-					s += (" \n\t\t\timplies previous once (some m0: Node.inbox & topic."+self.trigger.topic.replace('/','_') +
-						 " | (" + self.trigger.spec() + "))")
+					s += (" \n\t\t\timplies previous once (" + trigger_spec + ")")
 					return s
 			
 
@@ -133,7 +143,7 @@ class Property:
 		if self.type == self.CHECK:
 			s = "check prop_" + str(self.pc) + "{\n\t"
 			s += "always { " + self.observable.spec() + " }\n"
-			s += "}\n\n"
+			s += "} "
 			return s
 		if self.type == self.AXIOM:
 			s = "always { " + self.observable.spec() + " }\n\n"
