@@ -111,14 +111,14 @@ class Observable:	#Trocar nomes de behaviour e Observable
 				if self.behaviour.alias is None:
 					s = ("(some m1: Node.outbox & " + "topic."+self.behaviour.topic.replace('/','_') +
 						" | (" + self.behaviour.spec() + "))")
-					s += (" \n\t\t\timplies previous once ("+trigger_spec+")")
+					s += (" \n\t\t\timplies before once ("+trigger_spec+")")	 
 					return s
 				else:
 					# There is an Alias
 					# 'all' pattern must be writen 
 					s = ("all m1: Node.outbox &  topic." +self.behaviour.topic.replace('/','_') +
 						" | (" + self.behaviour.spec() + ")")
-					s += (" \n\t\t\timplies previous once (" + trigger_spec + ")")
+					s += (" \n\t\t\timplies before once (" + trigger_spec + ")")	
 					return s
 			
 

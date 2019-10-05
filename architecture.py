@@ -29,11 +29,11 @@ ros_model = ("abstract sig Node {\n" +
 			"\t\tall m : Node.outbox | eventually m not in Node.outbox\n" +
 			"\t}\n" 
 			"\tall m : Message, t: m.topic | always{\n" +	
-			"\t\tm in Node.inbox implies (some n : advertises.(m.topic) | previous once (m in n.outbox and m.topic = t))\n" + 
+			"\t\tm in Node.inbox implies (some n : advertises.(m.topic) | before once (m in n.outbox and m.topic = t))\n" + 
 			"\t}\n" +
 			"\talways{\n" +
 			"\t\tall n1: Node, m: n1.inbox |\n" + 
-			"\t\t\tprevious once (some n0: advertises.(m.topic), m0: n0.outbox |  (m0 = m) and (m0.topic = m.topic))\n"+ 
+			"\t\t\tbefore once (some n0: advertises.(m.topic), m0: n0.outbox |  (m0 = m) and (m0.topic = m.topic))\n"+ 
 			"\t}\n\n"+
 			"}\n\n" +
 			"fact init {\n" +
@@ -55,18 +55,28 @@ class Architecture:
 	REQUIREMENT = 4
 	REFERENCE = -1
 
-	def __init__(self,nodes,topics,properties=None):
+	def __init__(self,config_name,nodes,topics,properties=None):
 		self.pc = 0
+		self.config_name = config_name
 		self.__topics = dict()
 		self.__values = dict()
 		self.__nodes = dict()
 		self.__fields = dict()	#dict(Topic:String)
+		self.__prop_el_map = dict()
 		self.__create_structure(nodes,topics)
 		self.__axioms = self.__create_axioms(nodes)		#TODO
 		self.__properties = self.__create_properties(properties,self.CHECK)
 		self.prune_structure()
 		self.value_scope , self.message_scope , self.time_scope = self.__compute_scopes()
-		
+	
+
+	#String -> HplProperty + None
+	def get_hpl_prop(prop_name):
+		if prop_name in self.__prop_el_map.keys():
+			return self.__prop_el_map[prop_name]
+		else:
+			return None
+
 
 	def __compute_time_min_scope(self):
 		# reduce architecture to graph
@@ -511,6 +521,10 @@ class Architecture:
 					event = o.behaviour
 					observable = self.__create_Existence(event)
 					p = Property(self.pc,t,observable)
+					# Mapping Electrum Property Name to HplProperty 
+					p_name = "prop" + str(self.pc)
+					self.__prop_el_map.update({p_name:p})
+
 					if t == self.CHECK:
 						self.pc = self.pc + 1
 					return p				
@@ -518,6 +532,9 @@ class Architecture:
 					event = o.behaviour
 					observable = self.__create_Absence(event)
 					p = Property(self.pc,t,observable)
+					# Mapping Electrum Property Name to HplProperty 
+					p_name = "prop" + str(self.pc)
+					self.__prop_el_map.update({p_name:p})
 					if t == self.CHECK:
 						self.pc = self.pc + 1
 					return p
@@ -527,6 +544,9 @@ class Architecture:
 					event0 = o.trigger	
 					observable = self.__create_Cause(event0,event1)	
 					p = Property(self.pc,t,observable)
+					# Mapping Electrum Property Name to HplProperty 
+					p_name = "prop" + str(self.pc)
+					self.__prop_el_map.update({p_name:p})
 					if t == self.CHECK:
 						self.pc = self.pc + 1
 					return p				
@@ -535,6 +555,9 @@ class Architecture:
 					event1 = o.trigger
 					observable = self.__create_Require(event0,event1)
 					p = Property(self.pc,t,observable)
+					# Mapping Electrum Property Name to HplProperty 
+					p_name = "prop" + str(self.pc)
+					self.__prop_el_map.update({p_name:p})
 					if t == self.CHECK:
 						self.pc = self.pc + 1
 					return p
@@ -568,7 +591,8 @@ class Architecture:
 
 	def spec(self):
 		axioms = False
-		spec = ros_model
+		module_name = "module " + self.config_name + "\n\n"
+		spec = module_name + ros_model
 		spec += "------- Values -------\n\n"
 		for k in self.__values.keys():
 			value_obj = self.__values[k]	
