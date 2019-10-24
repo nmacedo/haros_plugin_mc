@@ -6,7 +6,7 @@ output : command (output)? ;
 
 command : name result ; 
 
-name : TYPE NAME SCOPE PV ;
+name : TYPE NAME SCOPE  ;
 
 result : unsat  
 	   | sat 	
@@ -30,9 +30,8 @@ WHITESPACE : ('\t' | ' ' | '\r' | '\n')+ -> skip;
 TYPE : 'Check ' ; 
 NAME : 'prop_'[0-9]+' ' ;
 SCOPE : 'for '[0-9]+' but '[0-9]+'..'[0-9]+' Time,'' exactly '[0-9]+' Value, '[0-9]+' Message';
-PV : '\n';
 
-UNSATISFIABLE : '---OUTCOME---\n''Unsatisfiable''.' ;
+UNSATISFIABLE : '---OUTCOME---\n''Unsatisfiable''.\n' ;
 
 INSTANCE : '---INSTANCE---\n' ;
 METAINFO : 'loop='[0-9]+'\nend='[0-9]+'\nintegers={'(('-'[0-9](',')? | [0-9](',')?)|(' '))+'}\n';

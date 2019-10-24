@@ -72,8 +72,7 @@ def state_from_description(txt):
 	state_obj = State(inbox=inbox,outbox=outbox,values=values)
 	return state_obj
 	
-class Interpreter(resultListener):
-	 
+class Interpreter(resultListener):	 
 	 def exitCommand(self, ctx):
 	 	# name interpretation
 	 	name_rule = ctx.name()
@@ -106,20 +105,18 @@ class Interpreter(resultListener):
 
 	 	result_Collection.add(result_obj)					# Update Collection
 
-
-
-def parse():
-	with open("teste.txt") as f:
-		data = f.read()
-	inputStream = antlr4.InputStream(data)
-	lexer = resultLexer(inputStream)
-	stream = antlr4.CommonTokenStream(lexer)
-	parser = resultParser(stream)
-	tree = parser.gr()
-	interpreter = Interpreter()
-	walker = ParseTreeWalker()
-	walker.walk(interpreter,tree)
-
-
-if __name__ == '__main__':
-	parse()
+class Parser():
+	def __init__(self,f):
+		self.file_name = f
+	def parse(self):
+		with open(self.file_name) as f:
+			data = f.read()
+		inputStream = antlr4.InputStream(data)
+		lexer = resultLexer(inputStream)
+		stream = antlr4.CommonTokenStream(lexer)
+		parser = resultParser(stream)
+		tree = parser.gr()
+		interpreter = Interpreter()
+		walker = ParseTreeWalker()
+		walker.walk(interpreter,tree)
+		return result_Collection

@@ -1,7 +1,5 @@
 import re
-
 # Ver como a cena dos valores esta a ser metida na estrutura, e pensar como se vai poder utilizar isto
-
 class ResultCollection():
 	def __init__(self):
 		self.results = dict()
@@ -67,7 +65,6 @@ class Scope():
 		s += "Time Scope:" + str(self.time_scope) + "\n\t\t"
 		return s
 
-
 class Instance():
 	def __init__(self,states):
 		self.states = states	#[State]	
@@ -80,7 +77,6 @@ class Instance():
 			i = i+1
 
 		return s		
-
 
 class State():
 	def __init__(self,inbox=[],outbox=[],values=[]):
