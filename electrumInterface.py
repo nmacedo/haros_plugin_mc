@@ -7,7 +7,7 @@ class ElectrumInterface(object):
 	def __init__(self,conf_name,nodes,topics,properties=None):
 		self.architecture = Architecture(conf_name,nodes,topics,properties=properties)
 		self.run_dir = os.getcwd()
-		self.model_check()
+		self.results = self.model_check()
 	
 	def model_check(self):
 		with open('/plugin_mc/model.ele','w') as f:
@@ -18,5 +18,7 @@ class ElectrumInterface(object):
 		parser = Parser(d)
 		results = ResultCollection()
 		results = parser.parse()
+		return results
+
 		
 

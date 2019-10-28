@@ -14,3 +14,6 @@ def configuration_analysis(iface, scope):
 		return 
 	
 	interface = ElectrumInterface(scope.name, scope.nodes, scope.topics,properties=scope.hpl_properties)
+	results = interface.results
+	print(results.debug())
+	iface.report_violation("arch",results.debug())

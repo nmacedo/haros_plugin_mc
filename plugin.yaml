@@ -21,6 +21,14 @@
 ---
 name: haros_plugin_mc
 version: 0.1
+rules:
+    arch:
+        name:           Arch Check
+        scope:          file
+        description:    Error reported by MC.
+        tags:
+            - modelCheck
+
 supported_rules:
     - mi_below_20
     - mi_below_65
