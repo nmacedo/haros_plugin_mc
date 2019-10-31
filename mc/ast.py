@@ -3,9 +3,13 @@ import re
 class ResultCollection():
 	def __init__(self):
 		self.results = dict()
+	
 	def add(self,result_obj):
 		self.results.update({result_obj.property_name:result_obj})
-	
+
+	def getResults(self):
+		return self.results
+
 	# Debug method: Print Results
 	def debug(self):
 		s = ""
@@ -68,6 +72,7 @@ class Scope():
 class Instance():
 	def __init__(self,states):
 		self.states = states	#[State]	
+	
 	def debug(self):
 		s = ""
 		i = 0

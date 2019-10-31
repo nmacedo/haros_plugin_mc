@@ -60,8 +60,8 @@ class Architecture:
 		self.__topics = dict()
 		self.__values = dict()
 		self.__nodes = dict()
-		self.__fields = dict()	#dict(Topic:String)
-		self.__prop_el_map = dict()
+		self.__fields = dict()		#dict(Topic:String)
+		self.__prop_el_map = dict() #dict(String:HplProperty)
 		self.__create_structure(nodes,topics)
 		self.__axioms = self.__create_axioms(nodes)		#TODO
 		self.__properties = self.__create_properties(properties,self.CHECK)
@@ -69,10 +69,14 @@ class Architecture:
 		self.value_scope , self.message_scope , self.time_scope = self.__compute_scopes()
 	
 
+	def get_nodes(self):
+		return self.__nodes
 	#String -> HplProperty + None
-	def get_hpl_prop(prop_name):
+	def get_hpl_prop(self,prop_name):
+		prop_name = prop_name.strip()
 		if prop_name in self.__prop_el_map.keys():
-			return self.__prop_el_map[prop_name]
+			p = self.__prop_el_map[prop_name]
+			return p.__str__()
 		else:
 			return None
 
@@ -85,6 +89,8 @@ class Architecture:
 
 
 
+	def to_abstract_name(self,name):
+		return name.replace('/','_')
 
 	def __compute_scopes(self):
 		min_value_scope = len(self.__values)
@@ -519,47 +525,47 @@ class Architecture:
 				if pattern == self.EXISTENCE:
 					event = o.behaviour
 					observable = self.__create_Existence(event)
-					p = Property(self.pc,t,observable)
+					pr = Property(self.pc,t,observable)
 					# Mapping Electrum Property Name to HplProperty 
-					p_name = "prop" + str(self.pc)
+					p_name = "prop_" + str(self.pc)
 					self.__prop_el_map.update({p_name:p})
 
 					if t == self.CHECK:
 						self.pc = self.pc + 1
-					return p				
+					return pr				
 				if pattern == self.ABSENCE: 	  
 					event = o.behaviour
 					observable = self.__create_Absence(event)
-					p = Property(self.pc,t,observable)
+					pr = Property(self.pc,t,observable)
 					# Mapping Electrum Property Name to HplProperty 
-					p_name = "prop" + str(self.pc)
+					p_name = "prop_" + str(self.pc)
 					self.__prop_el_map.update({p_name:p})
 					if t == self.CHECK:
 						self.pc = self.pc + 1
-					return p
+					return pr
 
 				if pattern == self.RESPONSE:	#Event Causes Event
 					event1 = o.behaviour
 					event0 = o.trigger	
 					observable = self.__create_Cause(event0,event1)	
-					p = Property(self.pc,t,observable)
+					pr = Property(self.pc,t,observable)
 					# Mapping Electrum Property Name to HplProperty 
-					p_name = "prop" + str(self.pc)
+					p_name = "prop_" + str(self.pc)
 					self.__prop_el_map.update({p_name:p})
 					if t == self.CHECK:
 						self.pc = self.pc + 1
-					return p				
+					return pr				
 				if pattern == self.REQUIREMENT: #Event Requires Event
 					event0 = o.behaviour
 					event1 = o.trigger
 					observable = self.__create_Require(event0,event1)
-					p = Property(self.pc,t,observable)
+					pr = Property(self.pc,t,observable)
 					# Mapping Electrum Property Name to HplProperty 
-					p_name = "prop" + str(self.pc)
+					p_name = "prop_" + str(self.pc)
 					self.__prop_el_map.update({p_name:p})
 					if t == self.CHECK:
 						self.pc = self.pc + 1
-					return p
+					return pr
 			else: 
 				print("Property Type Undeclared")
 				raise Exception('Property Type Undeclared.') 				
