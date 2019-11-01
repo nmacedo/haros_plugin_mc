@@ -18,6 +18,17 @@ class Num(Value):
 		self.signature = message_type.replace('/','_')
 		self.concrete_values = dict()	#dict{'electrum_value_name': Interval}
 	
+
+	def get_smallest(self,l):
+		print("will try to get the smallest interval")
+		r = self.concrete_values[l[0]]
+		for i in range(1,len(l)):
+			if self.concrete_values[l[i]] in r:
+				r = self.concrete_values[l[i]]
+		print("has got the smallest value")
+		print("the smallest value is: " + str(r))
+		return r
+
 	# (Sub_Signature_Name, Interval) -> Void	
 	def add_extension(self,sub_name,interval_obj):
 		if sub_name not in self.concrete_values.keys():
@@ -95,6 +106,11 @@ class String(Value):
 		self.signature = message_type.replace('/','_')
 		self.concrete_values = {}
 
+	def get_string_value(self,s):
+		if s.strip() in self.concrete_values.keys():
+			return self.concrete_values[s.strip()]
+		else:
+			return "String Concrete Value not Found."
 	#(Sub_Signature_Name, String) -> Void
 	def add_extension(self,sub_name,s):
 		if sub_name not in self.concrete_values.keys():
@@ -128,8 +144,7 @@ class Topic:
 
 class Node:
 	def __init__(self,node):
-		self.signature = node.rosname.full.replace('/','_')
-			
+		self.signature = node.rosname.full.replace('/','_')	
 		subscribers = node.subscribers
 		subscribers = map(lambda x: x.rosname.full.replace('/','_') , subscribers)
 		subscribers = map(lambda x: x.replace('~',str(self.signature)) , subscribers)

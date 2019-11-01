@@ -88,11 +88,12 @@ class State():
 		self.values = dict()	# dict{Message_id : value_name}
 		self.inbox = []			# node_name -> Message_id
 		self.outbox = []		# node_name -> Message_id
-		self.set_values(values)
+		self.set_values(values)		# Possible BUG here
 		self.set_state(inbox,outbox)
 
 	def remove_id(self,s):
 		return re.sub(r"\$[0-9]+","",s)
+	
 	#[(Message_name$id, Value_name$id)] -> Void
 	def set_values(self,values):
 		for v in values:

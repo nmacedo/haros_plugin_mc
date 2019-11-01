@@ -23,11 +23,13 @@ name: haros_plugin_mc
 version: 0.1
 rules:
     arch:
-        name:           Arch Check
+        name:           Architectural Properties
         scope:          file
-        description:    Error reported by MC.
+        description:    Error reported by haros_plugin_mc.
         tags:
-            - modelCheck
+            - Model-Check
+            - Architecture
+            - Hpl-Properties
 
 supported_rules:
     - mi_below_20

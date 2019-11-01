@@ -2,7 +2,8 @@ import os
 from .arch.architecture import *
 from .mc.result import *
 from .mc.ast import *
-
+from interval import *
+import re
 
 class ElectrumInterface(object):
 	def __init__(self,conf_name,nodes,topics,properties=None):
@@ -14,6 +15,44 @@ class ElectrumInterface(object):
 
 	def paragraph(self,text):
 		return ("<p>" + str(text) + "</p>")
+
+
+
+	def hasNumbers(self,string):
+		return any(char.isdigit() for char in string)
+
+	def extract_root(self,v):
+		l = re.split(r'(_[0-9]+)',v)
+		print("value after split: " + str(l))
+		return l[0]
+
+
+	def which_value(self,m,s):
+		print("has enter the which_value function")
+		print("the m is :" + str(m))
+		l = s.values[m]			# Values (root value and extensions)
+		print("l is :" + str(l))
+		root_value = ""
+		for v in l:
+			if not self.hasNumbers(v):
+				root_value = v
+				l.remove(v)		# inplace operator
+		# MARTELADO
+		if root_value =="" and l != []:
+			root_value = self.extract_root(l[0])
+
+		print("the root value is: " + str(root_value))
+		root_value_obj = self.architecture.get_root_value(root_value)
+		print("ROOT VALUE _ OBJ NAME : " + str(root_value_obj.message_type))
+		
+		# Need to get the smallest range value of l. and parse it to a string that will be returned
+		smallest_range = self.architecture.get_sml_range(root_value_obj, l)		#TODO
+		print("will try to get the field")
+		field = self.architecture.get_field_by_value(root_value_obj)			#TODO
+		r = str(field) + " in " + "[" + str(smallest_range[0].inf) + "," + str(smallest_range[0].sup) + "]"
+		print("R String: " + r)
+
+		return r
 
 	def receive(self,node,pstate,astate):
 		p_inbox = filter(lambda x : x[0].strip() == node.strip(), pstate.inbox)
@@ -30,7 +69,8 @@ class ElectrumInterface(object):
 			if m not in p_i:
 				received_messages.append(m)
 
-		return received_messages
+		received_values = map(lambda x: self.which_value(x,pstate), received_messages)
+		return received_values
 
 
 	def sends(self,node,pstate,astate):
@@ -48,20 +88,20 @@ class ElectrumInterface(object):
 			if m not in a_o:
 				sent_messages.append(m)
 		
-		return sent_messages
+		#return sent_messages
+		sent_values = map(lambda x: self.which_value(x,pstate), sent_messages)
+		return sent_values
 
 	# returns String html
 	def transitions_html(self,node,received_list,sent_list):
+		node_name = self.architecture.get_real_node(str(node).strip())	
 		html = ""
-		print("entrou aqui")
 		if received_list == [] and sent_list == []:
 			return html
 		for r in received_list:
-			print(r)
-			html += "<li> The " + str(node) + " has received " + str(r) + "</li>"
+			html += "<li> The " + str(node_name) + " has received a Message with { " + str(r) + " } </li>"
 		for s in sent_list:
-			print(s)
-			html += "<li> The " + str(node) + " has send " + str(s) + "</li>"
+			html += "<li> The " + str(node_name) + " has send a Message with { " + str(s) + " }</li>"
 		return html
 
 	# State x State x N -> String html
@@ -82,7 +122,6 @@ class ElectrumInterface(object):
 			html += self.transitions_html(node,received_messages,sent_messages)
 		return html
 
-
 	# Instance -> String html
 	def instance_to_html(self,instance):
 		print("is in the instance to html")
@@ -95,8 +134,6 @@ class ElectrumInterface(object):
 			html += self.state_to_html(previous_state,actual_state,i)
 		html += "</ol>"
 		return html
-
-
 
 	def concrete_name(self,result):
 		print("1")

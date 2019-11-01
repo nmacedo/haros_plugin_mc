@@ -68,6 +68,52 @@ class Architecture:
 		self.prune_structure()
 		self.value_scope , self.message_scope , self.time_scope = self.__compute_scopes()
 	
+	def get_real_node(self,n):
+		for k in self.__nodes.keys():
+			if n == self.__nodes[k].signature:
+				return k
+
+	def get_sml_range(self,root_v,l):
+		if isinstance(root_v,Num):
+			# is_num
+			v = root_v.get_smallest(l)
+			return v
+		else:
+			#is_string
+			s = l[0]
+			v = root_v.get_string_value(s)
+			#TODO
+
+	def get_field_by_value(self,root_v):
+		print("1")
+		m_t = root_v.message_type
+		print("m_t: " +str(m_t))
+		print("2")
+		l_t =  self.__fields.keys()
+		print("3")
+		topic = ""
+		for t in l_t:
+			print("c_t: " + self.__topics[t].message_type)
+			m_t_c = self.__topics[t].message_type 
+			m_t_c = m_t_c.replace('/','_')
+			if m_t_c == m_t:
+				topic = t
+				return self.__fields[topic]
+		# Return field
+		return "FOO"			# TODO			
+
+
+
+
+	def get_root_value(self,st):
+		print(str(st))
+		print("will try to get root value")
+		value_abs_name = st.strip()
+		for k in self.__values:
+			key_value = k.replace('/','_')
+			if key_value == value_abs_name:
+				print("has got the root value")
+				return self.__values[k]
 
 	def get_nodes(self):
 		return self.__nodes
