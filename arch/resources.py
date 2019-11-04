@@ -1,45 +1,45 @@
 from interval import *
 from ast import *
 
+# Abstract Interpretation of Message Types.
+# ROOT Value (Message Type)
 class Value:
 	def __init__(self,message_type):
-		self.message_type = message_type
-		self.signature = message_type.replace('/','_')
+		self.message_type = message_type 				# ROS METAMODEL
+		self.signature = message_type.replace('/','_')	# ROS ALLOY
 
 	def spec(self):
 		declaration = ("abstract sig " + self.signature +
 				" extends Value {}\n\n")
 		return declaration
 
-# Numbers
+# Numeric Values
 class Num(Value): 
 	def __init__(self,message_type,signature):
-		self.message_type = message_type
-		self.signature = message_type.replace('/','_')
-		self.concrete_values = dict()	#dict{'electrum_value_name': Interval}
+		self.message_type = message_type 			 	# ROS METAMODEL
+		self.signature = message_type.replace('/','_')  # ROS ALLOY
+		self.concrete_values = dict()					# Signature_Name : Interval()
 	
-
-	def get_smallest(self,l):
-		print("will try to get the smallest interval")
-		r = self.concrete_values[l[0]]
-		for i in range(1,len(l)):
-			if self.concrete_values[l[i]] in r:
-				r = self.concrete_values[l[i]]
-		print("has got the smallest value")
-		print("the smallest value is: " + str(r))
-		return r
-
-	# (Sub_Signature_Name, Interval) -> Void	
+	# (Signature_Name, Interval) -> Void	
 	def add_extension(self,sub_name,interval_obj):
 		if sub_name not in self.concrete_values.keys():
 			self.concrete_values.update({sub_name:interval_obj})
 	
-	def isliteral(self,sub_name):			#TODO
+	# Signature_Name -> Boolean
+	def isliteral(self,sub_name):	
 		if sub_name in self.concrete_values.keys():
 			interval = self.concrete_values[sub_name]
 			if interval.inf == interval.sup:
 				return True
 		return False
+
+	# [Signature_Name] -> Interval()	
+	def get_smallest_from(self,l):
+		r = self.concrete_values[l[0]]
+		for i in range(1,len(l)):
+			if self.concrete_values[l[i]] in r:
+				r = self.concrete_values[l[i]]
+		return r
 
 	def __independence_list(self,signature):
 		independence_list = []
@@ -66,12 +66,10 @@ class Num(Value):
 				" extends Value {}\n\n")
 		independence_aux = ""
 		inclusion_aux = ""
-		singleton_aux = ""
-		
+		singleton_aux = ""	
 		# Concrete Values
 		for signature in self.concrete_values.keys():
 			s += "sig " + signature + " in " + self.signature + " {}\n\n"
-
 		# Full independence fact
 		for signature in self.concrete_values.keys():
 			independence_list = self.__independence_list(signature)
@@ -80,7 +78,6 @@ class Num(Value):
 									' + '.join(independence_list) + ")\n")
 		if len(independence_aux)>0:
 			s += ("fact Independence {\n" + independence_aux + "}\n\n")
-		#UNTESTED
 		# Full inclusion fact
 		for signature in self.concrete_values.keys():
 			inclusions_list = self.__full_inclusion_list(signature)
@@ -89,7 +86,6 @@ class Num(Value):
 							' + '.join(inclusions_list) + ")\n")
 		if len(inclusion_aux)>0:
 			s += "fact Inclusions {\n" + inclusion_aux + "}\n\n"
-		
 		# Singletons fact
 		for signature in self.concrete_values.keys():
 			if self.__is_singleton(signature):
@@ -98,25 +94,26 @@ class Num(Value):
 			s += "fact Singletons {\n" + singleton_aux + "}\n\n"
 		return s
 
-
 #Strings
 class String(Value):
 	def __init__(self,message_type,signature):
-		self.message_type = message_type
-		self.signature = message_type.replace('/','_')
-		self.concrete_values = {}
+		self.message_type = message_type  			   # ROS METAMODEL
+		self.signature = message_type.replace('/','_') # ROS ALLOY
+		self.concrete_values = {}					   # Signature_Name : String
 
-	def get_string_value(self,s):
+	# Signature_Name -> String
+	def get_Value(self,s):
 		if s.strip() in self.concrete_values.keys():
 			return self.concrete_values[s.strip()]
 		else:
 			return "String Concrete Value not Found."
+
 	#(Sub_Signature_Name, String) -> Void
 	def add_extension(self,sub_name,s):
 		if sub_name not in self.concrete_values.keys():
 			self.concrete_values.update({sub_name:s})
 
-	def to_electrum(self):						
+	def spec(self):						
 		s = ("abstract sig " + self.signature +
 			" extends Value {}\n\n")
 		values = concrete_values.keys()
@@ -126,13 +123,16 @@ class String(Value):
 
 
 
+
+# Abstract Interpretation of a Topic RunTime Resource.
 class Topic:
 	def __init__(self,topic):
-		self.signature = topic.rosname.full.replace('/','_')
-		self.signature = self.signature.replace('?','UNKNOWN')
-		self.name = topic.rosname.full
-		self.value = topic.type.replace('/','_')
+		# ROS METAMODEL
+		self.name = topic.rosname.full  
 		self.message_type = topic.type
+		# ROS ALLOY
+		self.signature = topic.rosname.full.replace('/','_')
+		self.value = topic.type.replace('/','_')
 	
 	def spec(self):
 		declaration = ("one sig " + self.signature + " extends Topic{}\n")
@@ -141,36 +141,36 @@ class Topic:
 				self.value + "\n}\n\n")
 		return (declaration + message_fact)
 
-
+# Abstract Interpretation of a Node RunTime Process.
 class Node:
 	def __init__(self,node):
+		# ROS METAMODEL
+		self.rosname = node.rosname.full
+		# ROS ALLOY
 		self.signature = node.rosname.full.replace('/','_')	
-		subscribers = node.subscribers
-		subscribers = map(lambda x: x.rosname.full.replace('/','_') , subscribers)
-		subscribers = map(lambda x: x.replace('~',str(self.signature)) , subscribers)
-		subscribers = filter(lambda x: not x.__contains__("?"), subscribers)
-		self.subscribes = subscribers
-
-		publishers = node.publishers
-		publishers = map(lambda x: x.rosname.full.replace('/','_') , publishers)
-		publishers = map(lambda x: x.replace('~',self.signature) , publishers)
-		publishers = filter(lambda x: not x.__contains__("?"), publishers)
-		self.advertises = publishers
-
+		self.subscribes = self.__clean_data(node.subscribers)
+		self.advertises = self.__clean_data(node.publishers)
 		self.axioms = []
 
-	def behaviour_facts(self):
-		s = ("fact " + str(self.signature) + "_Behaviour {\n\n\t")
-		for axiom in self.axioms:
-			s +=(axiom.spec() + "\n\t")
-		s += "\n}\n"
-		return s
+	def __clean_data(self,l):
+		l = map(lambda x: x.rosname.full.replace('/','_') , l)
+		l = map(lambda x: x.replace('~',str(self.signature)) , l)
+		l = filter(lambda x: not x.__contains__("?"), l)
+		return l
+
 	def has_axioms(self):
 		return (self.axioms != [])
 	
 	def add_axioms(self,p):
 		self.axioms = self.axioms + p
 	
+	def behaviour_facts(self):
+		s = ("fact " + str(self.signature) + "_Behaviour {\n\n\t")
+		for axiom in self.axioms:
+			s +=(axiom.spec() + "\n\t")
+		s += "\n}\n"
+		return s
+
 	def spec(self):
 		subscribes = "none" if (self.subscribes == []) else ' + '.join(self.subscribes)
 		advertises = "none" if (self.advertises == []) else ' + '.join(self.advertises)

@@ -3,8 +3,19 @@ from interval import *
 from ast import *
 from resources import *
 
+          
+class Architecture:
 
-ros_model = ("abstract sig Node {\n" +
+	GLOBAL = 1 			#NOT IN USE
+	CHECK = 1 			#NOT IN USE
+	AXIOM = 2			#NOT IN USE
+	EXISTENCE = 1		#NOT IN USE
+	ABSENCE = 2			#NOT IN USE
+	RESPONSE = 3		#NOT IN USE
+	REQUIREMENT = 4		#NOT IN USE
+	REFERENCE = -1		#NOT IN USE
+
+	ros_model = ("abstract sig Node {\n" +
 			"\tsubscribes: set Topic,\n" +
 			"\tadvertises: set Topic,\n" +
 			"\tvar inbox : set Message,\n" +
@@ -39,35 +50,52 @@ ros_model = ("abstract sig Node {\n" +
 			"\tno (outbox + inbox)\n" +
 			"}\n\n")
 
-
-
-                           
-
-class Architecture:
-	
-	GLOBAL = 1
-	CHECK = 1
-	AXIOM = 2
-	EXISTENCE = 1
-	ABSENCE = 2
-	RESPONSE = 3
-	REQUIREMENT = 4
-	REFERENCE = -1
-
-	def __init__(self,config_name,nodes,topics,properties=None):
-		self.pc = 0
-		self.config_name = config_name
-		self.__topics = dict()
-		self.__values = dict()
-		self.__nodes = dict()
-		self.__fields = dict()		#dict(Topic:String)
-		self.__prop_el_map = dict() #dict(String:HplProperty)
+	def __init__(self,config_name,nodes,topics,properties=None,meta=None):
+		# Structure
+		self.config_name = config_name	# Configuration Name
+		self.meta = self.ros_model if meta is None else meta
+		self.__topics = dict()			# set Topic 
+		self.__values = dict()			# set Value
+		self.__nodes = dict()			# set Node
 		self.__create_structure(nodes,topics)
+
+
+
+		self.pc = 0						# Model Property Counter
+		self.__fields = dict()		
+		self.__prop_el_map = dict() 
 		self.__axioms = self.__create_axioms(nodes)		#TODO
 		self.__properties = self.__create_properties(properties,self.CHECK)
 		self.prune_structure()
 		self.value_scope , self.message_scope , self.time_scope = self.__compute_scopes()
 	
+
+	# ResourceCollection [Node], ResourceCollection [Topic] -> Void
+	def __create_structure(self,nodes,topics):	
+		# Extracting Topics and Root Values
+		for t in topics:
+			name = str(t.rosname.full)			
+			if name.__contains__('?') is True:			#Ignore Unknown Topics
+				continue
+			else:
+				topic_obj = Topic(t) 
+				self.__topics.update({name: topic_obj})
+			if t.type not in self.__values.keys():		#Update Root Values	
+				value_obj = Value(t.type)
+				self.__values.update({t.type:value_obj})
+		# Extracting Nodes	
+		for n in nodes:	
+			name = str(n.rosname.full)			
+			if name.__contains__('?') is True:			#Ignore Unknown Nodes
+				continue			
+			node_obj = Node(n)			
+			self.__nodes.update({n.rosname.full : node_obj})
+
+
+
+
+
+
 	def get_real_node(self,n):
 		for k in self.__nodes.keys():
 			if n == self.__nodes[k].signature:
@@ -76,7 +104,7 @@ class Architecture:
 	def get_sml_range(self,root_v,l):
 		if isinstance(root_v,Num):
 			# is_num
-			v = root_v.get_smallest(l)
+			v = root_v.get_smallest_from(l)
 			return v
 		else:
 			#is_string
@@ -201,36 +229,9 @@ class Architecture:
 				self.delete_node(k)
 		
 		return
+	
 
-			
-	# Testing Method
-	def debug_properties(self):
-		props = self.__properties
-		count = 1
-		for p in props:
-			print("Property " + str(count) + " SPEC:")
-			print(p.debug_print())
-			++count
 
-	def __create_structure(self,nodes,topics):	
-		for t in topics:
-			name = str(t.rosname.full)
-			
-			if name.__contains__('?') == True:			#Break Conditions
-				continue
-
-			topic_obj = Topic(t) 
-			self.__topics.update({t.rosname.full: topic_obj})
-			if t.type not in self.__values.keys():
-				value_obj = Value(t.type)
-				self.__values.update({t.type:value_obj})
-		
-		for n in nodes:	
-			name = str(n.rosname.full)			
-			if name.__contains__('?'):			#Break Conditions
-				continue			
-			node_obj = Node(n)			
-			self.__nodes.update({n.rosname.full : node_obj})
 
 
 	#HplFieldReference, String -> Boolean + Exception
@@ -638,13 +639,10 @@ class Architecture:
 				node_obj = self.__nodes[resource.rosname.full]
 				node_obj.add_axioms(pl)
 
-
-
-
 	def spec(self):
 		axioms = False
 		module_name = "module " + self.config_name + "\n\n"
-		spec = module_name + ros_model
+		spec = module_name + self.ros_model
 		spec += "------- Values -------\n\n"
 		for k in self.__values.keys():
 			value_obj = self.__values[k]	
@@ -675,3 +673,13 @@ class Architecture:
 						str(self.time_scope) +" Time\n\n")
 
 		return spec
+
+
+	# Testing Method
+	def debug_properties(self):
+		props = self.__properties
+		count = 1
+		for p in props:
+			print("Property " + str(count) + " SPEC:")
+			print(p.debug_print())
+			++count

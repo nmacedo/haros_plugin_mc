@@ -1,16 +1,24 @@
 import os
 from .arch.architecture import *
+
 from .mc.result import *
 from .mc.ast import *
 from interval import *
 import re
 
+
 class MC_Interface(object):
 	def __init__(self,conf_name,nodes,topics,properties=None):
 		self.architecture = Architecture(conf_name,nodes,topics,properties=properties)
+		print(self.architecture.spec())
+
 		self.run_dir = os.getcwd()
 		self.results = None
-		print(self.architecture.spec())
+
+
+
+
+
 
 	def paragraph(self,text):
 		return ("<p>" + str(text) + "</p>")
