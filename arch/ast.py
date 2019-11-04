@@ -1,6 +1,5 @@
 
 class Condition:
-
 	def __init__(self,lhs,operator,rhs):
 		self.lhs = lhs
 		self.operator = operator
@@ -24,10 +23,9 @@ class Condition:
 				s = self.lhs + ".value " + self.operator + " " + self.rhs
 				return s
 
-class Event:
-	
+
+class Event:		
 	PUBLISH = 1
-	
 	def __init__(self,action,topic,conditions,is_set,alias=None):
 		self.action = action
 		self.topic = topic
@@ -49,13 +47,11 @@ class Event:
 		return s
 
 
-class Observable:	#Trocar nomes de behaviour e Observable
-	
+class Observable:	#Trocar nomes de behaviour e Observable	
 	EXISTENCE = 1
 	ABSENCE = 2
 	RESPONSE = 3
 	REQUIREMENT = 4
-
 	def __init__(self,pattern,behaviour,trigger=None):
 		
 		self.pattern = pattern
@@ -148,11 +144,4 @@ class Property:
 		if self.type == self.AXIOM:
 			s = "always { " + self.observable.spec() + " }\n\n"
 			return s
-
-
-
-
-
-  
-
 

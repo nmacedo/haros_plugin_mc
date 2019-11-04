@@ -11,7 +11,6 @@ class MC_Interface(object):
 	def __init__(self,conf_name,nodes,topics,properties=None):
 		self.architecture = Architecture(conf_name,nodes,topics,properties=properties)
 		print(self.architecture.spec())
-		
 		self.run_dir = os.getcwd()
 		self.results = None
 
@@ -48,7 +47,7 @@ class MC_Interface(object):
 		print("ROOT VALUE _ OBJ NAME : " + str(root_value_obj.message_type))
 		
 		# Need to get the smallest range value of l. and parse it to a string that will be returned
-		smallest_range = self.architecture.get_sml_range(root_value_obj, l)		#TODO
+		smallest_range = self.architecture.get_bottom_range(root_value_obj, l)		#TODO
 		print("will try to get the field")
 		field = self.architecture.get_field_by_value(root_value_obj)			#TODO
 		r = ""
@@ -104,7 +103,7 @@ class MC_Interface(object):
 
 	# returns String html
 	def transitions_html(self,node,received_list,sent_list):
-		node_name = self.architecture.get_real_node(str(node).strip())	
+		node_name = self.architecture.get_rosname(str(node).strip())	
 		html = ""
 		if received_list == [] and sent_list == []:
 			return html

@@ -58,16 +58,18 @@ class Architecture:
 		self.__values = dict()			# set Value
 		self.__nodes = dict()			# set Node
 		self.__create_structure(nodes,topics)
-
-
-
-		self.pc = 0						# Model Property Counter
-		self.__fields = dict()		
-		self.__prop_el_map = dict() 
-		self.__axioms = self.__create_axioms(nodes)		#TODO
+		# Behaviour
+		self.pc = 0									# Model Property Counter
+		self.__fields = dict()						# Valid Field Name
+		self.__prop_el_map = dict() 				# Prop_Name : Property
+		self.__create_axioms(nodes)					
 		self.__properties = self.__create_properties(properties,self.CHECK)
+		# Computing Scopes
+		self.value_scope = 4
+		self.message_scope = 9
+		self.time_scope = 10
+		# Reducing Structure
 		self.prune_structure()
-		self.value_scope , self.message_scope , self.time_scope = self.__compute_scopes()
 	
 
 	# ResourceCollection [Node], ResourceCollection [Topic] -> Void
@@ -96,140 +98,7 @@ class Architecture:
 
 
 
-	def get_real_node(self,n):
-		for k in self.__nodes.keys():
-			if n == self.__nodes[k].signature:
-				return k
 
-	def get_sml_range(self,root_v,l):
-		if isinstance(root_v,Num):
-			# is_num
-			v = root_v.get_smallest_from(l)
-			return v
-		else:
-			#is_string
-			#s = l[0]
-			#v = root_v.get_string_value(s)
-			#TODO
-			return None
-
-	def get_field_by_value(self,root_v):
-		print("1")
-		m_t = root_v.message_type
-		print("m_t: " +str(m_t))
-		print("2")
-		l_t =  self.__fields.keys()
-		print("3")
-		topic = ""
-		for t in l_t:
-			print("c_t: " + self.__topics[t].message_type)
-			m_t_c = self.__topics[t].message_type 
-			m_t_c = m_t_c.replace('/','_')
-			if m_t_c == m_t:
-				topic = t
-				return self.__fields[topic]
-		# Return field
-		return "FOO"			# TODO			
-
-
-
-
-	def get_root_value(self,st):
-		print(str(st))
-		print("will try to get root value")
-		value_abs_name = st.strip()
-		for k in self.__values:
-			key_value = k.replace('/','_')
-			if key_value == value_abs_name:
-				print("has got the root value")
-				return self.__values[k]
-
-	def get_nodes(self):
-		return self.__nodes
-	#String -> HplProperty + None
-	def get_hpl_prop(self,prop_name):
-		prop_name = prop_name.strip()
-		if prop_name in self.__prop_el_map.keys():
-			p = self.__prop_el_map[prop_name]
-			return p.__str__()
-		else:
-			return None
-
-
-	def __compute_time_min_scope(self):
-		# reduce architecture to graph
-		#compute longest path
-		longest_path = 10 # Example
-		return longest_path
-
-
-
-	def to_abstract_name(self,name):
-		return name.replace('/','_')
-
-	def __compute_scopes(self):
-		min_value_scope = len(self.__values)
-		min_message_scope = len(self.__topics) + 2
-		min_time_scope = self.__compute_time_min_scope()
-		return min_value_scope , min_message_scope, min_time_scope
-
-	#TODO
-
-	def delete_topic(self,t):
-		# Maintaining node coherency
-		for k in self.__nodes.keys():
-			node = self.__nodes[k]
-			if t.signature in node.subscribes:
-				node.subscribes.remove(t.signature)
-			if t.signature in node.advertises:
-				node.advertises.remove(t.signature)
-		# Deleting Topic Object
-		mt = t.name
-		del self.__topics[mt]
-		return
-
-	def delete_value(self,v):
-		self.__values.pop(v)
-
-	def delete_node(self,k):
-		self.__nodes.pop(k)
-
-
-	def prune_structure(self):
-		subscribers = []
-		advertises = []
-		for k in self.__nodes.keys():
-			node = self.__nodes[k]
-			subscribers = subscribers + node.subscribes
-			advertises = advertises + node.advertises
-
-		# Delete Dead Topics
-		for k in self.__topics.keys():
-			# Extra condition (if the topic is used in property or axiom, 'continue')
-			topic = self.__topics[k]
-			topic_name = topic.signature
-			if (topic_name not in subscribers) or (topic_name not in advertises): 
-				self.delete_topic(topic)
-
-	
-		# Delete Dead Values
-		values = self.__values.keys()
-		for k in self.__topics.keys():
-			mt = self.__topics[k].message_type
-			if mt in values:
-				values.remove(mt)
-
-		dead_values = values
-		for v in dead_values:
-			self.delete_value(v)
-		# Delete Dead Nodes
-		for k in self.__nodes.keys():
-			node = self.__nodes[k]
-			if node.subscribes == [] and node.advertises == []:
-				self.delete_node(k)
-		
-		return
-	
 
 
 
@@ -622,14 +491,16 @@ class Architecture:
 			raise Exception('Unsupported Property.')
 		
 
+
+
 	# [HplProperty] -> [Property] + Exception
 	def __create_properties(self,properties,t):
 		if properties is None:
-			print("Properties are None...")
 			return []
 		else:
 			return map ((lambda x : self.__conversion(x,t)) , properties)
 
+	# [HplProperty] -> Void
 	def __create_axioms(self,nodes):
 		for resource in nodes:
 			node = resource.node
@@ -638,6 +509,170 @@ class Architecture:
 				pl = self.__create_properties(properties,self.AXIOM)
 				node_obj = self.__nodes[resource.rosname.full]
 				node_obj.add_axioms(pl)
+
+	
+
+
+
+
+
+
+
+
+	def delete_topic(self,t):
+		# Maintaining node coherency
+		for k in self.__nodes.keys():
+			node = self.__nodes[k]
+			if t.signature in node.subscribes:
+				node.subscribes.remove(t.signature)
+			if t.signature in node.advertises:
+				node.advertises.remove(t.signature)
+		# Deleting Topic Object
+		mt = t.name
+		del self.__topics[mt]
+		return
+
+	def delete_value(self,v):
+		self.__values.pop(v)
+
+	def delete_node(self,k):
+		self.__nodes.pop(k)
+
+
+	def prune_structure(self):
+		subscribers = []
+		advertises = []
+		for k in self.__nodes.keys():
+			node = self.__nodes[k]
+			subscribers = subscribers + node.subscribes
+			advertises = advertises + node.advertises
+
+		# Delete Dead Topics
+		for k in self.__topics.keys():
+			# Extra condition (if the topic is used in property or axiom, 'continue')
+			topic = self.__topics[k]
+			topic_name = topic.signature
+			if (topic_name not in subscribers) or (topic_name not in advertises): 
+				self.delete_topic(topic)
+
+	
+		# Delete Dead Values
+		values = self.__values.keys()
+		for k in self.__topics.keys():
+			mt = self.__topics[k].message_type
+			if mt in values:
+				values.remove(mt)
+
+		dead_values = values
+		for v in dead_values:
+			self.delete_value(v)
+		# Delete Dead Nodes
+		for k in self.__nodes.keys():
+			node = self.__nodes[k]
+			if node.subscribes == [] and node.advertises == []:
+				self.delete_node(k)
+		
+		return
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	# Auxiliary Methods
+	# Signature_Name -> Rosname
+	def get_rosname(self,n):
+		for k in self.__nodes.keys():
+			if n == self.__nodes[k].signature:
+				return k
+		for k in self.__topics.keys():
+			if n == self.__topics[k].signature:
+				return k
+		for k in self.__values.keys():
+			if n == self.__values[k].signature:
+				return k
+
+
+	def get_bottom_range(self,root_v,l):
+		if isinstance(root_v,Num):
+			# is_num
+			v = root_v.get_smallest_from(l)
+			return v
+		else:
+			#is_string
+			#s = l[0]
+			#v = root_v.get_string_value(s)
+			#TODO
+			return None
+
+
+	def get_field_by_value(self,root_v):
+		print("1")
+		m_t = root_v.message_type
+		print("m_t: " +str(m_t))
+		print("2")
+		l_t =  self.__fields.keys()
+		print("3")
+		topic = ""
+		for t in l_t:
+			print("c_t: " + self.__topics[t].message_type)
+			m_t_c = self.__topics[t].message_type 
+			m_t_c = m_t_c.replace('/','_')
+			if m_t_c == m_t:
+				topic = t
+				return self.__fields[topic]
+		# Return field
+		return "FOO"			# TODO			
+
+
+	def get_root_value(self,st):
+		print(str(st))
+		print("will try to get root value")
+		value_abs_name = st.strip()
+		for k in self.__values:
+			key_value = k.replace('/','_')
+			if key_value == value_abs_name:
+				print("has got the root value")
+				return self.__values[k]
+
+	def get_nodes(self):
+		return self.__nodes
+	#String -> HplProperty + None
+	def get_hpl_prop(self,prop_name):
+		prop_name = prop_name.strip()
+		if prop_name in self.__prop_el_map.keys():
+			p = self.__prop_el_map[prop_name]
+			return p.__str__()
+		else:
+			return None
+
+
+	def to_abstract_name(self,name):
+		return name.replace('/','_')
+
+
+
+
+
+
+
+
+
 
 	def spec(self):
 		axioms = False
