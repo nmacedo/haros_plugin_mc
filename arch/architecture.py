@@ -80,9 +80,10 @@ class Architecture:
 			return v
 		else:
 			#is_string
-			s = l[0]
-			v = root_v.get_string_value(s)
+			#s = l[0]
+			#v = root_v.get_string_value(s)
 			#TODO
+			return None
 
 	def get_field_by_value(self,root_v):
 		print("1")

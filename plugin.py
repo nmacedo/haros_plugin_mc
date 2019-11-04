@@ -11,7 +11,7 @@ from electrumInterface import *
 def configuration_analysis(iface, scope):
 	if scope.nodes.__len__() <= 1:	# Node Configurations
 		return 
-	interface = ElectrumInterface(scope.name, scope.nodes, scope.topics,properties=scope.hpl_properties)
-	results = interface.model_check()
-	html = interface.results_to_html(results)
-	iface.report_violation("arch",html)
+	mc_iface = ElectrumInterface(scope.name, scope.nodes, scope.topics,properties=scope.hpl_properties)
+	results = mc_iface.model_check()
+	html = mc_iface.results_to_html(results)
+	iface.report_violation("mc",html)

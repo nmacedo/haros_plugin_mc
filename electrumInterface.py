@@ -12,11 +12,8 @@ class ElectrumInterface(object):
 		self.results = None
 		print(self.architecture.spec())
 
-
 	def paragraph(self,text):
 		return ("<p>" + str(text) + "</p>")
-
-
 
 	def hasNumbers(self,string):
 		return any(char.isdigit() for char in string)
@@ -25,7 +22,6 @@ class ElectrumInterface(object):
 		l = re.split(r'(_[0-9]+)',v)
 		print("value after split: " + str(l))
 		return l[0]
-
 
 	def which_value(self,m,s):
 		print("has enter the which_value function")
@@ -49,7 +45,15 @@ class ElectrumInterface(object):
 		smallest_range = self.architecture.get_sml_range(root_value_obj, l)		#TODO
 		print("will try to get the field")
 		field = self.architecture.get_field_by_value(root_value_obj)			#TODO
-		r = str(field) + " in " + "[" + str(smallest_range[0].inf) + "," + str(smallest_range[0].sup) + "]"
+		r = ""
+		
+		# Ou e um intervalo de interiros ou e uma string
+		if isinstance(smallest_range,interval):
+			if (smallest_range[0].inf == smallest_range[0].sup):
+				r = str(field) + " = " + str(smallest_range[0].inf)
+			else:
+				r = str(field) + " in " + str(smallest_range[0].inf) + " to " + str(smallest_range[0].sup) 
+			
 		print("R String: " + r)
 
 		return r
@@ -99,9 +103,9 @@ class ElectrumInterface(object):
 		if received_list == [] and sent_list == []:
 			return html
 		for r in received_list:
-			html += "<li> The " + str(node_name) + " has received a Message with { " + str(r) + " } </li>"
+			html += "<li> The " + str(node_name) + " receives a Message with { " + str(r) + " } </li>"
 		for s in sent_list:
-			html += "<li> The " + str(node_name) + " has send a Message with { " + str(s) + " }</li>"
+			html += "<li> The " + str(node_name) + " sends a Message with { " + str(s) + " }</li>"
 		return html
 
 	# State x State x N -> String html
