@@ -94,7 +94,7 @@ class Num(Value):
 			s += "fact Singletons {\n" + singleton_aux + "}\n\n"
 		return s
 
-#Strings
+#String Values
 class String(Value):
 	def __init__(self,message_type,signature):
 		self.message_type = message_type  			   # ROS METAMODEL
@@ -120,8 +120,6 @@ class String(Value):
 		for signature in self.values:	
 			spec += "lone sig " + signature + " extends " + self.signature + " {}\n\n"
 		return spec
-
-
 
 
 # Abstract Interpretation of a Topic RunTime Resource.
@@ -158,12 +156,15 @@ class Node:
 		l = filter(lambda x: not x.__contains__("?"), l)
 		return l
 
+	# Void -> Boolean
 	def has_axioms(self):
 		return (self.axioms != [])
 	
+	# AST Property -> Void
 	def add_axioms(self,p):
 		self.axioms = self.axioms + p
 	
+	# Void -> String
 	def behaviour_facts(self):
 		s = ("fact " + str(self.signature) + "_Behaviour {\n\n\t")
 		for axiom in self.axioms:
