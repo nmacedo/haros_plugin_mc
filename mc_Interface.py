@@ -5,7 +5,7 @@ from .mc.ast import *
 from interval import *
 import re
 
-class ElectrumInterface(object):
+class MC_Interface(object):
 	def __init__(self,conf_name,nodes,topics,properties=None):
 		self.architecture = Architecture(conf_name,nodes,topics,properties=properties)
 		self.run_dir = os.getcwd()
