@@ -102,7 +102,7 @@ class String(Value):
 		self.concrete_values = {}					   # Signature_Name : String
 
 	# Signature_Name -> String
-	def get_Value(self,s):
+	def get_value(self,s):
 		if s.strip() in self.concrete_values.keys():
 			return self.concrete_values[s.strip()]
 		else:

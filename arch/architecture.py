@@ -6,14 +6,14 @@ from resources import *
           
 class Architecture:
 
-	GLOBAL = 1 			#NOT IN USE
-	CHECK = 1 			#NOT IN USE
-	AXIOM = 2			#NOT IN USE
-	EXISTENCE = 1		#NOT IN USE
-	ABSENCE = 2			#NOT IN USE
-	RESPONSE = 3		#NOT IN USE
-	REQUIREMENT = 4		#NOT IN USE
-	REFERENCE = -1		#NOT IN USE
+	GLOBAL = 1 			
+	CHECK = 1 			
+	AXIOM = 2			
+	EXISTENCE = 1		
+	ABSENCE = 2			
+	RESPONSE = 3		
+	REQUIREMENT = 4		
+	REFERENCE = -1		
 
 	ros_model = ("abstract sig Node {\n" +
 			"\tsubscribes: set Topic,\n" +
@@ -69,7 +69,7 @@ class Architecture:
 		self.message_scope = 9
 		self.time_scope = 10
 		# Reducing Structure
-		self.prune_structure()
+		self.__prune_structure()
 	
 
 	# ResourceCollection [Node], ResourceCollection [Topic] -> Void
@@ -95,15 +95,7 @@ class Architecture:
 
 
 
-
-
-
-
-
-
-
-
-	#HplFieldReference, String -> Boolean + Exception
+	# 1st Msg_Filter_Grammar validation
 	def __validate_field(self,f,topic):
 		if topic in self.__fields.keys():
 			valid_field = self.__fields[topic]
@@ -116,7 +108,16 @@ class Architecture:
 			self.__fields.update({topic:f})
 			return True
 
-	#Hpl_Value , String -> String + self.REFERENCE + Exception
+	# 2st Msg_Filter_Grammar validation
+	def __validate_operator(self,op):
+		if op in ["!=","=","in","not in"]:
+			return True
+		else:
+			print("Unsupported Operator Use.")
+			raise Exception('Unsupported Operator Use.')
+
+
+	# 3st Msg_Filter_Grammar validation (informs structural architecture)
 	def __validate_value(self,hpl_value,topic):	
 		is_set = False
 		#References
@@ -146,17 +147,10 @@ class Architecture:
 													interval(real_value))
 					self.__values.update({message_type: new_root_value_obj})
 					return is_set, [sub_signature_name]
-
-			#Literal Booleans
-			if isinstance(real_value, bool):
-				print("Boolean Values Are Unsupported.")
-				raise Exception ('Boolean Values Are Unsupported.')
-		
-			# UNTESTED PATH
 			#Literal Strings
 			if isinstance(real_value, str):
-				real_value = str(hpl_value.value)		 ## String in String
-				real_value = real_value.replace('\"','') ## String
+				real_value = str(hpl_value.value)		 
+				real_value = real_value.replace('\"','') 
 				if isinstance(root_value_obj,String):
 					sub_signature_name = root_value_obj.signature + "_" + real_value
 					root_value_obj.add_extension(sub_signature_name,real_value)
@@ -169,16 +163,13 @@ class Architecture:
 					self.__values.update({message_type: new_root_value_obj})
 					return is_set, [sub_signature_name]
 
-		# Range
+		# Numeric Ranges
 		if hpl_value.is_range:
 			topic_obj = self.__topics[topic]
 			message_type = topic_obj.message_type
 			root_value_obj = self.__values[message_type]
-			
-
 			lower = hpl_value.lower_bound
 			upper = hpl_value.upper_bound
-			
 			if lower.is_reference or upper.is_reference:
 				print("Unsupported Use of References.")
 				raise Exception ('Unsupported Use of References.')
@@ -199,9 +190,8 @@ class Architecture:
 												interval([lower_value,upper_value]))
 				self.__values.update({message_type: new_root_value_obj})
 				return is_set, [sub_signature_name]
-			
-
-		#Sets
+	
+		#Literal Sets
 		if hpl_value.is_set: 
 			topic_obj = self.__topics[topic]
 			message_type = topic_obj.message_type
@@ -247,63 +237,19 @@ class Architecture:
 			else:
 				raise Exception('Set Type is Unsupported.')
 
+	# events grammar Cut
+	def __extract_events(self,ecd):
+		events = []
+		for c in ecd.chains:
+			events.append(c.events[0])
+		return events
 
-
-
-	def __validate_operator(self,op):
-		if op in ["!=","=","in","not in"]:
-			return True
-		else:
-			print("Unsupported Operator Use.")
-			raise Exception('Unsupported Operator Use.')
-
-	
-
-	# ecd -> HplEvent
-	def __extract(self,ecd):	
-		if len(ecd.chains) < 2:
-			if len(ecd.chains[0].events) < 2:
-				return ecd.chains[0].events[0]
-		else:
-			return None
-
-	# Creating Observable_Existence
-	def __create_Existence(self,event):
-		hpl_event = self.__extract(event)
-		if hpl_event is not None:
-			# Simple Event
-			action = hpl_event.event_type	# int
-			topic = str(hpl_event.topic) 	# Token
-			
-			#Validate Message_Filters and Create Conditions:
-			hpl_field_conditions = hpl_event.msg_filter.conditions
-			conditions = []
-			for c in hpl_field_conditions:
-				self.__validate_field(c.field,topic)
-				self.__validate_operator(c.operator)
-				is_set, vl = self.__validate_value(c.value,topic)
-				for v in vl:
-					new_condition = Condition("m0",c.operator,v)
-					conditions.append(new_condition)
-
-			#Create Event:
-			event = Event(action,topic,conditions,is_set)
-			#Create Observable:
-			t = self.EXISTENCE
-			observable = Observable(t,event)
-			return observable
-
-
-
-
-	def __create_Absence(self,event):
-		hpl_event = self.__extract(event)
-		if hpl_event is not None:
-			# Simple Event
+	# [Hpl_Event] -> [Event]
+	def __generate_events(self,hpl_events,negation=False,conditions_type=1):
+		events = []
+		for hpl_event in hpl_events:	
 			action = hpl_event.event_type
-			topic = str(hpl_event.topic) 	# Token
-			
-			#Validate Message_Filters and Create Conditions:
+			topic = str(hpl_event.topic) 	
 			hpl_field_conditions = hpl_event.msg_filter.conditions
 			conditions = []
 			for c in hpl_field_conditions:
@@ -311,125 +257,74 @@ class Architecture:
 				self.__validate_operator(c.operator)
 				is_set, vl = self.__validate_value(c.value,topic)
 				for v in vl:
-					new_condition = Condition("m0",c.operator,v)
-					conditions.append(new_condition)
-
-			#Create Event:
-			is_set = not is_set		# Because the Absence formula needs to be negated
-			event = Event(action,topic,conditions,is_set)
-			#Create Observable:
-			t = self.ABSENCE
-			observable = Observable(t,event)
-			return observable
-
-	def __create_Cause(self,event0,event1):
-		hpl_event0 = self.__extract(event0)	# Trigger
-		hpl_event1 = self.__extract(event1)	# Behaviour
-
-		if hpl_event0 is not None and hpl_event1 is not None:
-			# Trigger
-			action = hpl_event0.event_type
-			topic = str(hpl_event0.topic)
-			hpl0_field_conditions = hpl_event0.msg_filter.conditions
-			conditions = []
-			for c in hpl0_field_conditions:
-				self.__validate_field(c.field,topic)
-				self.__validate_operator(c.operator)
-				is_set, vl = self.__validate_value(c.value,topic)
-				for v in vl:
-					new_condition = Condition("m0",c.operator,v)
-					conditions.append(new_condition)
-			event0 = Event(action,topic,conditions,is_set,alias=hpl_event0.alias)
-
-			#Behaviour
-			action = hpl_event1.event_type
-			topic = str(hpl_event1.topic)
-			hpl1_field_conditions = hpl_event1.msg_filter.conditions
-			conditions1 = []
-			for c in hpl1_field_conditions:
-				self.__validate_field(c.field,topic)
-				self.__validate_operator(c.operator)
-				is_set, vl = self.__validate_value(c.value,topic) 
-
-				for v in vl:
-					if v == self.REFERENCE:
-						new_condition = Condition("m1",c.operator,"m0")
-					else:
+					new_condition = None
+					if conditions_type == 1:
+						new_condition = Condition("m0",c.operator,v)
+					if conditions_type == 2:
 						new_condition = Condition("m1",c.operator,v)
-					conditions1.append(new_condition)
-			
-			event1 = Event(action,topic,conditions1,is_set)
-
-			#Create Observable
-			t = self.RESPONSE
-			observable = Observable(t,event1,trigger=event0)
-			return observable
-
-
-	def __extract_triggers(self,ecd):
-
-		if len(ecd.chains) == 2:
-			first_event = ecd.chains[0].events[0]
-			second_event = ecd.chains[1].events[0]
-			events = [first_event,second_event]
-			return events
-		elif len(ecd.chains) == 1:
-			events = [ecd.chains[0].events[0]]
-			return events
-		else:
-			return None
-
-	# Refactoring
-	def __create_Require(self,event0,event1):
-		hpl_event0 = self.__extract(event0) #Behaviour
-
-		triggers = self.__extract_triggers(event1)
-
-		if hpl_event0 is not None and triggers is not None:
-			#Behaviour
-			action = hpl_event0.event_type
-			topic = str(hpl_event0.topic)
-			hpl0_field_conditions = hpl_event0.msg_filter.conditions
-			conditions = []
-			for c in hpl0_field_conditions:
-				self.__validate_field(c.field,topic)
-				self.__validate_operator(c.operator)
-				is_set, vl = self.__validate_value(c.value,topic)
-				for v in vl:
-					new_condition = Condition("m1",c.operator,v)
-					conditions.append(new_condition)
-			
-			event1 = Event(action,topic,conditions,is_set,alias=hpl_event0.alias)
-
-			trigger_events = []
-			count = 1
-			for t in triggers:
-				count = count + 1
-				hpl_event1 = t
-
-			#Trigger
-				action = hpl_event1.event_type
-				topic = str(hpl_event1.topic)
-				hpl1_field_conditions = hpl_event1.msg_filter.conditions
-				conditions1=[]
-				for c in hpl1_field_conditions:
-					self.__validate_field(c.field,topic)
-					self.__validate_operator(c.operator)
-					is_set, vl = self.__validate_value(c.value,topic)
-					for v in vl:
+					if conditions_type == 3:
 						if v==self.REFERENCE:
 							new_condition = Condition("m0",c.operator,"m1")
 						else:
 							new_condition = Condition("m0",c.operator,v)
-						conditions1.append(new_condition)
-			
-				event0 = Event(action,topic,conditions1,is_set)
-				trigger_events.append(event0)
-
-			#Create Observable
-			t = self.REQUIREMENT
-			observable = Observable(t,event1,trigger=trigger_events)
+					if conditions_type == 4:
+						if v==self.REFERENCE:
+							new_condition = Condition("m1",c.operator,"m0")
+						else:
+							new_condition = Condition("m1",c.operator,v)
+					conditions.append(new_condition)
+			if negation is True:
+				is_set = not is_set		# Negation
+			event = Event(action,topic,conditions,is_set,alias=hpl_event.alias)
+			events.append(event)
+		return events
+		
+	# HplTopLevelEvent -> Observable AST
+	def __create_Cause(self,event0,event1):
+		triggers = self.__extract_events(event0)
+		behaviours = self.__extract_events(event1)
+		if behaviours is not [] and triggers is not []:
+			behaviours = self.__generate_events(behaviours,conditions_type=4)
+			triggers = self.__generate_events(triggers,conditions_type=1)
+			t = self.RESPONSE
+			observable = Observable(t,behaviours,trigger=triggers)
 			return observable
+
+
+	# HplTopLevelEvent -> Observable AST
+	def __create_Require(self,event0,event1):
+		behaviours = self.__extract_events(event0) 
+		triggers = self.__extract_events(event1)
+		if behaviours is not [] and triggers is not []:
+			events1 = self.__generate_events(behaviours,conditions_type=2)
+			triggers = self.__generate_events(behaviours,conditions_type=3)
+			t = self.REQUIREMENT
+			observable = Observable(t,events1,trigger=triggers)
+			return observable
+
+
+	# HplTopLevelEvent -> Observable AST
+	def __create_Absence(self,event):
+		hpl_events = self.__extract_events(event)
+		events = []
+		if hpl_events is not []:
+			events = self.__generate_events(hpl_events,negation=True)
+			t = self.ABSENCE
+			observable = Observable(t,events)
+			return observable
+		return None
+
+
+	# HplTopLevelEvent -> Observable AST
+	def __create_Existence(self,event):
+		hpl_events = self.__extract_events(event)
+		events = []
+		if hpl_events is not []:
+			events = self.__generate_events(hpl_events)
+			t = self.EXISTENCE
+			observable = Observable(t,events)
+			return observable
+		return None
 
 
 	# HplProperty -> Property + Exception		
@@ -438,60 +333,30 @@ class Architecture:
 		if scope_type == self.GLOBAL:
 			if t==self.CHECK or t==self.AXIOM:		
 				o = p.observable 
-				pattern = o.pattern		
+				pattern = o.pattern	
 				if pattern == self.EXISTENCE:
 					event = o.behaviour
-					observable = self.__create_Existence(event)
-					pr = Property(self.pc,t,observable)
-					# Mapping Electrum Property Name to HplProperty 
-					p_name = "prop_" + str(self.pc)
-					self.__prop_el_map.update({p_name:p})
-
-					if t == self.CHECK:
-						self.pc = self.pc + 1
-					return pr				
+					observable = self.__create_Existence(event)				
 				if pattern == self.ABSENCE: 	  
 					event = o.behaviour
 					observable = self.__create_Absence(event)
-					pr = Property(self.pc,t,observable)
-					# Mapping Electrum Property Name to HplProperty 
-					p_name = "prop_" + str(self.pc)
-					self.__prop_el_map.update({p_name:p})
-					if t == self.CHECK:
-						self.pc = self.pc + 1
-					return pr
-
-				if pattern == self.RESPONSE:	#Event Causes Event
+				if pattern == self.RESPONSE:	
 					event1 = o.behaviour
 					event0 = o.trigger	
-					observable = self.__create_Cause(event0,event1)	
-					pr = Property(self.pc,t,observable)
-					# Mapping Electrum Property Name to HplProperty 
-					p_name = "prop_" + str(self.pc)
-					self.__prop_el_map.update({p_name:p})
-					if t == self.CHECK:
-						self.pc = self.pc + 1
-					return pr				
-				if pattern == self.REQUIREMENT: #Event Requires Event
+					observable = self.__create_Cause(event0,event1)								
+				if pattern == self.REQUIREMENT: 
 					event0 = o.behaviour
 					event1 = o.trigger
-					observable = self.__create_Require(event0,event1)
-					pr = Property(self.pc,t,observable)
-					# Mapping Electrum Property Name to HplProperty 
-					p_name = "prop_" + str(self.pc)
-					self.__prop_el_map.update({p_name:p})
-					if t == self.CHECK:
-						self.pc = self.pc + 1
-					return pr
-			else: 
-				print("Property Type Undeclared")
-				raise Exception('Property Type Undeclared.') 				
+					observable = self.__create_Require(event0,event1)		
+				pr = Property(self.pc,t,observable)
+				p_name = "prop_" + str(self.pc)
+				self.__prop_el_map.update({p_name:p})		
+				if t == self.CHECK:
+					self.pc = self.pc + 1
+				return pr				
 		else:
-			print("Unsupported Property")
 			raise Exception('Unsupported Property.')
 		
-
-
 
 	# [HplProperty] -> [Property] + Exception
 	def __create_properties(self,properties,t):
@@ -499,6 +364,7 @@ class Architecture:
 			return []
 		else:
 			return map ((lambda x : self.__conversion(x,t)) , properties)
+
 
 	# [HplProperty] -> Void
 	def __create_axioms(self,nodes):
@@ -511,51 +377,38 @@ class Architecture:
 				node_obj.add_axioms(pl)
 
 	
-
-
-
-
-
-
-
-
-	def delete_topic(self,t):
-		# Maintaining node coherency
+	# Prunning Architecture
+	def __delete_topic(self,t):
 		for k in self.__nodes.keys():
 			node = self.__nodes[k]
 			if t.signature in node.subscribes:
 				node.subscribes.remove(t.signature)
 			if t.signature in node.advertises:
 				node.advertises.remove(t.signature)
-		# Deleting Topic Object
 		mt = t.name
 		del self.__topics[mt]
 		return
 
-	def delete_value(self,v):
+	def __delete_value(self,v):
 		self.__values.pop(v)
 
-	def delete_node(self,k):
+	def __delete_node(self,k):
 		self.__nodes.pop(k)
 
-
-	def prune_structure(self):
+	def __prune_structure(self):
 		subscribers = []
 		advertises = []
 		for k in self.__nodes.keys():
 			node = self.__nodes[k]
 			subscribers = subscribers + node.subscribes
 			advertises = advertises + node.advertises
-
 		# Delete Dead Topics
 		for k in self.__topics.keys():
 			# Extra condition (if the topic is used in property or axiom, 'continue')
 			topic = self.__topics[k]
 			topic_name = topic.signature
 			if (topic_name not in subscribers) or (topic_name not in advertises): 
-				self.delete_topic(topic)
-
-	
+				self.__delete_topic(topic)
 		# Delete Dead Values
 		values = self.__values.keys()
 		for k in self.__topics.keys():
@@ -565,37 +418,16 @@ class Architecture:
 
 		dead_values = values
 		for v in dead_values:
-			self.delete_value(v)
+			self.__delete_value(v)
 		# Delete Dead Nodes
 		for k in self.__nodes.keys():
 			node = self.__nodes[k]
 			if node.subscribes == [] and node.advertises == []:
-				self.delete_node(k)
+				self.__delete_node(k)
 		
 		return
 	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	# Auxiliary Methods
-	# Signature_Name -> Rosname
+	#------Interface-------
 	def get_rosname(self,n):
 		for k in self.__nodes.keys():
 			if n == self.__nodes[k].signature:
@@ -607,52 +439,37 @@ class Architecture:
 			if n == self.__values[k].signature:
 				return k
 
-
 	def get_bottom_range(self,root_v,l):
 		if isinstance(root_v,Num):
-			# is_num
 			v = root_v.get_smallest_from(l)
 			return v
 		else:
-			#is_string
-			#s = l[0]
-			#v = root_v.get_string_value(s)
-			#TODO
-			return None
-
+			s = l[0]
+			v = root_v.get_value(s)
+			return v
 
 	def get_field_by_value(self,root_v):
-		print("1")
 		m_t = root_v.message_type
-		print("m_t: " +str(m_t))
-		print("2")
 		l_t =  self.__fields.keys()
-		print("3")
 		topic = ""
 		for t in l_t:
-			print("c_t: " + self.__topics[t].message_type)
 			m_t_c = self.__topics[t].message_type 
 			m_t_c = m_t_c.replace('/','_')
 			if m_t_c == m_t:
 				topic = t
 				return self.__fields[topic]
-		# Return field
-		return "FOO"			# TODO			
-
+		return None	
 
 	def get_root_value(self,st):
-		print(str(st))
-		print("will try to get root value")
 		value_abs_name = st.strip()
 		for k in self.__values:
 			key_value = k.replace('/','_')
 			if key_value == value_abs_name:
-				print("has got the root value")
 				return self.__values[k]
 
 	def get_nodes(self):
 		return self.__nodes
-	#String -> HplProperty + None
+
 	def get_hpl_prop(self,prop_name):
 		prop_name = prop_name.strip()
 		if prop_name in self.__prop_el_map.keys():
@@ -661,17 +478,8 @@ class Architecture:
 		else:
 			return None
 
-
 	def to_abstract_name(self,name):
 		return name.replace('/','_')
-
-
-
-
-
-
-
-
 
 
 	def spec(self):
@@ -708,13 +516,3 @@ class Architecture:
 						str(self.time_scope) +" Time\n\n")
 
 		return spec
-
-
-	# Testing Method
-	def debug_properties(self):
-		props = self.__properties
-		count = 1
-		for p in props:
-			print("Property " + str(count) + " SPEC:")
-			print(p.debug_print())
-			++count
