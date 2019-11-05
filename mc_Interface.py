@@ -1,6 +1,5 @@
 import os
 from .arch.architecture import *
-
 from .mc.result import *
 from .mc.ast import *
 from interval import *

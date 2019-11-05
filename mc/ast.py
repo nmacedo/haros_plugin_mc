@@ -10,18 +10,6 @@ class ResultCollection():
 	def getResults(self):
 		return self.results
 
-	# Debug method: Print Results
-	def debug(self):
-		s = ""
-		for k in self.results.keys():
-			result_obj = self.results[k]
-			if isinstance(result_obj,SatResult):
-				s += "SAT\n"
-				s += result_obj.debug()
-			else:
-				s += "UNSAT\n"
-				s += result_obj.debug()
-		return s
 
 # Hierarchical object
 class ResultObject():
@@ -35,11 +23,6 @@ class UnsatResult(ResultObject):
 		self.property_name = property_name
 		self.scope = scope
 	
-	def debug(self):
-		s = ""
-		s += "Property Name: " + self.property_name + "\n\t"
-		s += "Property Scope: \n\t\t" + self.scope.debug() + "\n"
-		return s	
 
 class SatResult(ResultObject):
 	def __init__(self,t,property_name,scope,instance_obj):
@@ -48,13 +31,6 @@ class SatResult(ResultObject):
 		self.scope = scope 					#Scope Object
 		self.result = instance_obj
 	
-	def debug(self):
-		s = ""
-		s += "Property Name: " + self.property_name + "\n\t"
-		s += "Property Scope: \n\t\t" + self.scope.debug() + "\n"
-		s += "\tResult:\n"
-		s += self.result.debug()
-		return s	
 
 class Scope():
 	def __init__(self,value,message,time):
@@ -62,26 +38,13 @@ class Scope():
 		self.message_scope = message
 		self.time_scope = time
 
-	def debug(self):
-		s = ""
-		s += "Value Scope:" + str(self.value_scope) + "\n\t\t"
-		s += "Message Scope:" + str(self.message_scope) + "\n\t\t"
-		s += "Time Scope:" + str(self.time_scope) + "\n\t\t"
-		return s
+
 
 class Instance():
 	def __init__(self,states):
 		self.states = states	#[State]	
 	
-	def debug(self):
-		s = ""
-		i = 0
-		for st in self.states:
-			s += "\t\t State: " + str(i)
-			s += "\t\t" + st.debug()
-			i = i+1
-
-		return s		
+	
 
 class State():
 	def __init__(self,inbox=[],outbox=[],values=[]):
@@ -116,10 +79,3 @@ class State():
 			new_outbox.append((node_name,message_id))
 		self.inbox = new_inbox
 		self.outbox = new_outbox
-
-	def debug(self):
-		s = ""
-		s += "Values: " + str(self.values) + "\n\n"
-		s += "inbox: " + str(self.inbox) + "\n\n"
-		s += "outbox: " + str(self.outbox) + "\n\n"
-		return s
