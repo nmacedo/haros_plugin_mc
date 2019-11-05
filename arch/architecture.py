@@ -102,7 +102,7 @@ class Architecture:
 			if f.token == valid_field.token:
 				return True
 			else:
-				print("Unsupported Field Use")
+				print("[MC] Unsupported Field Use.")
 				raise Exception('Unsupported Field Use.')
 		else:
 			self.__fields.update({topic:f})
@@ -113,7 +113,7 @@ class Architecture:
 		if op in ["!=","=","in","not in"]:
 			return True
 		else:
-			print("Unsupported Operator Use.")
+			print("[MC] Unsupported Operator Use.")
 			raise Exception('Unsupported Operator Use.')
 
 
@@ -171,7 +171,7 @@ class Architecture:
 			lower = hpl_value.lower_bound
 			upper = hpl_value.upper_bound
 			if lower.is_reference or upper.is_reference:
-				print("Unsupported Use of References.")
+				print("[MC] sUnsupported Use of References.")
 				raise Exception ('Unsupported Use of References.')
 			lower_value = lower.value
 			upper_value = upper.value

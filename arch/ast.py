@@ -1,4 +1,3 @@
-
 class Condition:
 	def __init__(self,lhs,operator,rhs):
 		self.lhs = lhs

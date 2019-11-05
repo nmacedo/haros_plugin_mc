@@ -17,7 +17,6 @@ class ResultObject():
 		pass
 
 class UnsatResult(ResultObject):
-	
 	def __init__(self,t,property_name,scope):
 		self.property_type = t
 		self.property_name = property_name

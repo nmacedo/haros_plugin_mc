@@ -1,9 +1,23 @@
 import os
 from .arch.architecture import *
+from .arch.resources import *
 from .mc.result import *
 from .mc.ast import *
 from interval import *
 import re
+
+
+class HTML(object):
+	def __init__(self):
+		return
+	def paragraph(self,text):
+		return ("<p>" + str(text) + "</p>")
+	def item(self,text):
+		return ("<li>" + str(text) + "</li>")
+	def ol(self,lis):
+		return ("<ol>" + str(lis) + "</ol>")
+	def header(self,text,size):
+		return "<h" + str(size) + ">" + str(text) + "</h" + str(size) + ">"
 
 
 class MC_Interface(object):
@@ -11,55 +25,32 @@ class MC_Interface(object):
 		self.architecture = Architecture(conf_name,nodes,topics,properties=properties)
 		self.run_dir = os.getcwd()
 		self.results = None
+		self.html = HTML()
 
-
-	def paragraph(self,text):
-		return ("<p>" + str(text) + "</p>")
-
-	def hasNumbers(self,string):
-		return any(char.isdigit() for char in string)
-
-	def extract_root(self,v):
+	def __extract_root(self,v):
 		l = re.split(r'(_[0-9]+)',v)
-		print("value after split: " + str(l))
 		return l[0]
 
-	def which_value(self,m,s):
-		print("has enter the which_value function")
-		print("the m is :" + str(m))
-		l = s.values[m]			# Values (root value and extensions)
-		print("l is :" + str(l))
-		root_value = ""
-		for v in l:
-			if not self.hasNumbers(v):
-				root_value = v
-				l.remove(v)		# inplace operator
-		# MARTELADO
-		if root_value =="" and l != []:
-			root_value = self.extract_root(l[0])
 
-		print("the root value is: " + str(root_value))
+	def __which_value(self,m,s):
+		l = s.values[m]	
+		r = ""		
+		root_value = self.__extract_root(l[0])
 		root_value_obj = self.architecture.get_root_value(root_value)
-		print("ROOT VALUE _ OBJ NAME : " + str(root_value_obj.message_type))
-		
-		# Need to get the smallest range value of l. and parse it to a string that will be returned
-		smallest_range = self.architecture.get_bottom_range(root_value_obj, l)		#TODO
-		print("will try to get the field")
-		field = self.architecture.get_field_by_value(root_value_obj)			#TODO
-		r = ""
-		
-		# Ou e um intervalo de interiros ou e uma string
-		if isinstance(smallest_range,interval):
-			if (smallest_range[0].inf == smallest_range[0].sup):
-				r = str(field) + " = " + str(smallest_range[0].inf)
-			else:
-				r = str(field) + " in " + str(smallest_range[0].inf) + " to " + str(smallest_range[0].sup) 
-			
-		print("R String: " + r)
-
+		field = self.architecture.get_field_by_value(root_value_obj)
+		if isinstance(root_value_obj,String):	# It's String
+			string = root_value_obj.concrete_values[l[0]]
+			r = str(field) + " = " + str(string)
+		else:									# It's Numeric
+			smallest_range = self.architecture.get_bottom_range(root_value_obj, l)					
+			if isinstance(smallest_range,interval):
+				if (smallest_range[0].inf == smallest_range[0].sup):
+					r = str(field) + " = " + str(smallest_range[0].inf)
+				else:
+					r = str(field) + " in " + str(smallest_range[0].inf) + " to " + str(smallest_range[0].sup) 
 		return r
 
-	def receive(self,node,pstate,astate):
+	def __receive(self,node,pstate,astate):
 		p_inbox = filter(lambda x : x[0].strip() == node.strip(), pstate.inbox)
 		act_inbox = filter(lambda x : x[0].strip() == node.strip(), astate.inbox)
 		p_i = []
@@ -68,17 +59,16 @@ class MC_Interface(object):
 		a_i = []
 		for p in act_inbox:
 			a_i.append(p[1])
-		# Received messages
 		received_messages = []
 		for m in a_i:
 			if m not in p_i:
 				received_messages.append(m)
 
-		received_values = map(lambda x: self.which_value(x,pstate), received_messages)
+		received_values = map(lambda x: self.__which_value(x,pstate), received_messages)
 		return received_values
 
 
-	def sends(self,node,pstate,astate):
+	def __sends(self,node,pstate,astate):
 		p_outbox = filter(lambda x : x[0].strip() == node.strip(), pstate.outbox)
 		act_outbox = filter(lambda x : x[0].strip() == node.strip(), astate.outbox)
 		p_o = []
@@ -87,104 +77,82 @@ class MC_Interface(object):
 		a_o = []
 		for p in act_outbox:
 			a_o.append(p[1])
-		# Sent messages
 		sent_messages = []
 		for m in p_o:
 			if m not in a_o:
 				sent_messages.append(m)
 		
-		#return sent_messages
-		sent_values = map(lambda x: self.which_value(x,pstate), sent_messages)
+		sent_values = map(lambda x: self.__which_value(x,pstate), sent_messages)
 		return sent_values
 
-	# returns String html
-	def transitions_html(self,node,received_list,sent_list):
+
+	def __transitions_html(self,node,received_list,sent_list):
 		node_name = self.architecture.get_rosname(str(node).strip())	
 		html = ""
 		if received_list == [] and sent_list == []:
 			return html
 		for r in received_list:
-			html += "<li> The " + str(node_name) + " receives a Message with { " + str(r) + " } </li>"
+			html +=	self.html.item("The " + str(node_name) + " receives a Message with { " + str(r) + " }")
 		for s in sent_list:
-			html += "<li> The " + str(node_name) + " sends a Message with { " + str(s) + " }</li>"
+			html += self.html.item("The " + str(node_name) + " sends a Message with { " + str(s) + " }")
 		return html
 
-	# State x State x N -> String html
-	def state_to_html(self,pstate,astate,st_n):
+
+	def __state_to_html(self,pstate,astate,st_n):
 		html = ""
-		print("is in the state_to_html")
-		nodes = self.architecture.get_nodes() 										# All the nodes.rosname.full
-		print("ok1")
+		nodes = self.architecture.get_nodes() 										
 		nodes = nodes.keys()
-		print("ok2")
-		nodes_abst = map(lambda x : self.architecture.to_abstract_name(x), nodes)	# All the abstract nodes names
+		nodes_abst = map(lambda x : self.architecture.to_abstract_name(x), nodes)	
 		for node in nodes_abst:
-			print("ok3")
-			received_messages = self.receive(node,pstate,astate) 					# [Message_id]
-			print("ok4")
-			sent_messages = self.sends(node,pstate,astate)							# [Message_id]
-			print("ok5")
-			html += self.transitions_html(node,received_messages,sent_messages)
+			received_messages = self.__receive(node,pstate,astate) 					
+			sent_messages = self.__sends(node,pstate,astate)							
+			html += self.__transitions_html(node,received_messages,sent_messages)
 		return html
 
-	# Instance -> String html
-	def instance_to_html(self,instance):
-		print("is in the instance to html")
+	def __instance_to_html(self,instance):
 		html = ""
-		html = "<ol>"
 		states = instance.states
 		for i in range(1,len(states)): # range change a ver se da mais o ultimo resultado
 			previous_state = states[i-1]
 			actual_state = states[i]
-			html += self.state_to_html(previous_state,actual_state,i)
-		html += "</ol>"
+			html += self.__state_to_html(previous_state,actual_state,i)
+		html += self.html.ol(html)
 		return html
 
-	def concrete_name(self,result):
-		print("1")
+	def __concrete_name(self,result):
 		prop_name = result.property_name
-		print("2")
 		hpl_name = "'" + self.architecture.get_hpl_prop(str(prop_name)) + "'"
-		print("3")
-		html = "<h4> Property: " + str(hpl_name) + "</h4>"
-		print("4")
+		html = self.html.header("Property: " + str(hpl_name), 4) 
 		return html 
 
-	def sat_html(self,result):
+	def __sat_html(self,result):
 		html = "<br>"
-		html += self.concrete_name(result)
-		print("will go paragraph sat")
-		html += self.paragraph("<strong> Counter-example: </strong>")
-		print("ok in the instance to html")
-		html += self.instance_to_html(result.result)
-		print("1000")
+		html += self.__concrete_name(result)
+		html += self.html.paragraph("<strong> Counter-example: </strong>")
+		html += self.__instance_to_html(result.result)
 		return html
 
-	def unsat_html(self,result):
-		print("will tey to get the unsat html")
+
+	def __unsat_html(self,result):
 		html = "<br>"
-		html += self.concrete_name(result)
-		print("will go paragraph unsat")
-		html += self.paragraph("<strong> No counter-example </strong> has been found for the given scope.")
+		html += self.__concrete_name(result)
+		html += self.html.paragraph("<strong> No counter-example </strong> has been found for the given scope.")
 		return html
 
-	def to_html(self,result):
+	def __html_aux(self,result):
 		if isinstance(result,SatResult):
-			print("will go sat")
-			return self.sat_html(result)
+			return self.__sat_html(result)
 		else:
-			print("will go unsat")
-			return self.unsat_html(result)
+			return self.__unsat_html(result)
 
-	# .mc.ast.ResultCollection -> htlm String
-	def results_to_html(self,results):
+	# Interface
+	def to_html(self,results):
 		html_str = ""
 		results = results.results.values()
 		for v in results:
-			html_str += self.to_html(v)
+			html_str += self.__html_aux(v)
 		return html_str
 		
-	# void -> .mc.ast.ResultCollection
 	def model_check(self):
 		with open('/plugin_mc/model.ele','w') as f:
 			f.write(self.architecture.spec())	
@@ -192,7 +160,5 @@ class MC_Interface(object):
 		os.system(cmd)
 		d = self.run_dir + "/results.txt"
 		parser = Parser(d)
-		results = ResultCollection()
-		results = parser.parse()
-		self.results = results
-		return results
+		self.results = parser.parse()
+		return self.results
