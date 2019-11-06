@@ -46,11 +46,13 @@ class Instance():
 	
 
 class State():
-	def __init__(self,inbox=[],outbox=[],values=[]):
-		self.values = dict()	# dict{Message_id : value_name}
+	def __init__(self,inbox=[],outbox=[],values=[],topics=[]):
+		self.values = dict()	# dict{Message_id : [value_name]}
+		self.topics = dict()	# dict{Message_id : topic_name}
 		self.inbox = []			# node_name -> Message_id
 		self.outbox = []		# node_name -> Message_id
-		self.set_values(values)		# Possible BUG here
+		self.set_values(values)
+		self.set_topics(topics)		
 		self.set_state(inbox,outbox)
 
 	def remove_id(self,s):
@@ -63,7 +65,12 @@ class State():
 			value_name = v[1]		# Tratar destes valores 
 			self.values.update({message_id:value_name})
 
-		
+	def set_topics(self,topics):
+		for t in topics:
+			message_id = t[0]
+			topic_name = t[1]
+			self.topics.update({message_id:topic_name})
+
 	# Should be refactored
 	def set_state(self,inbox,outbox):
 		new_inbox = []

@@ -19,36 +19,42 @@ class HTML(object):
 	def header(self,text,size):
 		return "<h" + str(size) + ">" + str(text) + "</h" + str(size) + ">"
 
-
 class MC_Interface(object):
 	def __init__(self,conf_name,nodes,topics,properties=None):
 		self.architecture = Architecture(conf_name,nodes,topics,properties=properties)
 		self.run_dir = os.getcwd()
 		self.results = None
 		self.html = HTML()
-
+		
 	def __extract_root(self,v):
 		l = re.split(r'(_[0-9]+)',v)
 		return l[0]
 
 
 	def __which_value(self,m,s):
-		l = s.values[m]	
+		l = s.values[m]
 		r = ""		
 		root_value = self.__extract_root(l[0])
+		if root_value in l:
+			l.remove(root_value)
 		root_value_obj = self.architecture.get_root_value(root_value)
 		field = self.architecture.get_field_by_value(root_value_obj)
 		if isinstance(root_value_obj,String):	# It's String
 			string = root_value_obj.concrete_values[l[0]]
 			r = str(field) + " = " + str(string)
 		else:									# It's Numeric
-			smallest_range = self.architecture.get_bottom_range(root_value_obj, l)					
+			smallest_range = self.architecture.get_bottom_range(root_value_obj, l)				
 			if isinstance(smallest_range,interval):
 				if (smallest_range[0].inf == smallest_range[0].sup):
 					r = str(field) + " = " + str(smallest_range[0].inf)
 				else:
 					r = str(field) + " in " + str(smallest_range[0].inf) + " to " + str(smallest_range[0].sup) 
 		return r
+
+	def __which_topic(self,m,s):
+		l = s.topics[m]
+		topic_name = self.architecture.get_rosname(str(l).strip())
+		return topic_name
 
 	def __receive(self,node,pstate,astate):
 		p_inbox = filter(lambda x : x[0].strip() == node.strip(), pstate.inbox)
@@ -63,8 +69,7 @@ class MC_Interface(object):
 		for m in a_i:
 			if m not in p_i:
 				received_messages.append(m)
-
-		received_values = map(lambda x: self.__which_value(x,pstate), received_messages)
+		received_values = map(lambda x: (self.__which_value(x,pstate),self.__which_topic(x,pstate)), received_messages)
 		return received_values
 
 
@@ -81,8 +86,7 @@ class MC_Interface(object):
 		for m in p_o:
 			if m not in a_o:
 				sent_messages.append(m)
-		
-		sent_values = map(lambda x: self.__which_value(x,pstate), sent_messages)
+		sent_values = map(lambda x: (self.__which_value(x,pstate),self.__which_topic(x,pstate)), sent_messages)
 		return sent_values
 
 
@@ -92,9 +96,9 @@ class MC_Interface(object):
 		if received_list == [] and sent_list == []:
 			return html
 		for r in received_list:
-			html +=	self.html.item("The " + str(node_name) + " receives a Message with { " + str(r) + " }")
+			html +=	self.html.item("The " + str(node_name) + " receives a Message { " + str(r[0]) + " } through " + str(r[1]) + " Topic ")
 		for s in sent_list:
-			html += self.html.item("The " + str(node_name) + " sends a Message with { " + str(s) + " }")
+			html += self.html.item("The " + str(node_name) + " sends a Message { " + str(s[0]) + " } through " + str(s[1]) + " Topic ")
 		return html
 
 
@@ -116,7 +120,7 @@ class MC_Interface(object):
 			previous_state = states[i-1]
 			actual_state = states[i]
 			html += self.__state_to_html(previous_state,actual_state,i)
-		html += self.html.ol(html)
+		html = self.html.ol(html)
 		return html
 
 	def __concrete_name(self,result):

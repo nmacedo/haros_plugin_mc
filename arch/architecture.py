@@ -191,6 +191,7 @@ class Architecture:
 				self.__values.update({message_type: new_root_value_obj})
 				return is_set, [sub_signature_name]
 	
+		# BUG
 		#Literal Sets
 		if hpl_value.is_set: 
 			topic_obj = self.__topics[topic]
@@ -208,13 +209,13 @@ class Architecture:
 						sub_signature_names.append(sub_signature_name)
 					else:
 						signature = root_value_obj.signature		
-						new_root_value_obj = Num(signature,message_type)
+						new_root_value_obj = Num(message_type,signature)
 						sub_signature_name = signature + "_" + str(real_value)
 						new_root_value_obj.add_extension(sub_signature_name,
 														interval(real_value))
 						self.__values.update({message_type: new_root_value_obj})
 						sub_signature_names.append(sub_signature_name)
-
+						root_value_obj = new_root_value_obj
 				return True, sub_signature_names
 
 			elif strings:
@@ -297,7 +298,7 @@ class Architecture:
 		triggers = self.__extract_events(event1)
 		if behaviours is not [] and triggers is not []:
 			events1 = self.__generate_events(behaviours,conditions_type=2)
-			triggers = self.__generate_events(behaviours,conditions_type=3)
+			triggers = self.__generate_events(triggers,conditions_type=3)
 			t = self.REQUIREMENT
 			observable = Observable(t,events1,trigger=triggers)
 			return observable
@@ -438,6 +439,7 @@ class Architecture:
 		for k in self.__values.keys():
 			if n == self.__values[k].signature:
 				return k
+		return None
 
 	def get_bottom_range(self,root_v,l):
 		if isinstance(root_v,Num):
@@ -449,7 +451,7 @@ class Architecture:
 			return v
 
 	def get_field_by_value(self,root_v):
-		m_t = root_v.message_type
+		m_t = root_v.message_type.replace('/','_')
 		l_t =  self.__fields.keys()
 		topic = ""
 		for t in l_t:

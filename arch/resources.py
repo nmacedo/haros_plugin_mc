@@ -35,10 +35,10 @@ class Num(Value):
 
 	# [Signature_Name] -> Interval()	
 	def get_smallest_from(self,l):
-		r = self.concrete_values[l[0]]
+		r = self.concrete_values[l[0].strip()]
 		for i in range(1,len(l)):
-			if self.concrete_values[l[i]] in r:
-				r = self.concrete_values[l[i]]
+			if self.concrete_values[l[i].strip()] in r:
+				r = self.concrete_values[l[i].strip()]
 		return r
 
 	def __independence_list(self,signature):

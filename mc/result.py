@@ -30,31 +30,57 @@ class Interpreter(resultListener):
 		new_s = re.sub(r"this/","",s)
 		new_s = re.sub(r"={.*}","",new_s)
 		return new_s
-	def search(self,v_id,st_txt):
+	def search_value(self,v_id,st_txt):
 		fl = filter(lambda x: v_id in x, st_txt)
 		fl = filter(lambda x: 'univ' not in x, fl)
 		fl = filter(lambda x: 'this/Message' not in x, fl)
 		fl = filter(lambda x: 'this/Value' not in x, fl)
 		rl = map(lambda x : self.ext_sig(x),fl)
 		return rl
-	def transform(self,values,lines):
+
+	def search_topic(self,t_id,st_txt):
+		fl = filter(lambda x: t_id in x, st_txt)
+		fl = filter(lambda x: 'univ' not in x, fl)
+		fl = filter(lambda x: 'this/Message' not in x, fl)
+		fl = filter(lambda x: 'this/Topic' not in x, fl)
+		rl = map(lambda x : self.ext_sig(x),fl)
+		return rl
+
+	def transform_values(self,values,lines):
 		new_values = []
 		for v in values:
 			m_id = v[0]
 			v_id = v[1]
-			abs_l = self.search(v_id,lines)
+			abs_l = self.search_value(v_id,lines)
 			new_values.append((m_id,abs_l))
 		return new_values
+
+	def transform_topics(self,topics,lines):
+		new_topics = []
+		for t in topics:
+			m_id = t[0]
+			t_id = t[1]
+			abs_l = self.search_topic(t_id,lines)
+			new_topics.append((m_id,abs_l[2]))
+
+		return new_topics
+
 	def state_from_description(self,txt):
 		lines = txt.split('\n')	
 		inbox = self.field_to_tuple(filter(lambda x: 'this/Node<:inbox' in x,lines),
 						"(this/Node<:inbox={)|}")
 		outbox = self.field_to_tuple(filter(lambda x: 'this/Node<:outbox' in x,lines),
 						"(this/Node<:outbox={)|}")	
+		# Values
 		values = self.field_to_tuple(filter(lambda x: 'this/Message<:value' in x,lines),
 						"(this/Message<:value={)|}")
-		values = self.transform(values,lines)
-		state_obj = State(inbox=inbox,outbox=outbox,values=values)
+		values = self.transform_values(values,lines)
+		# Topics
+		topics = self.field_to_tuple(filter(lambda x: 'this/Message<:topic' in x,lines),
+						"(this/Message<:topic={)|}")
+		topics = self.transform_topics(topics,lines)
+
+		state_obj = State(inbox=inbox,outbox=outbox,values=values,topics=topics)
 		return state_obj
 
 	def exitCommand(self, ctx):

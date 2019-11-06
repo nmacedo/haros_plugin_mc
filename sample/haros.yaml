@@ -15,7 +15,7 @@ nodes:
             /scan: sensor_msgs/LaserScan
         hpl:
             properties:
-                - 'globally: some /scan {ranges[0] in 0 to 100}'
+                - 'globally: no /scan {ranges[0] not in 0 to 100}'
 
     joy/joy_node:
         rosname: joy_teleop/joy_node
@@ -23,7 +23,7 @@ nodes:
             /joy_teleop/joy: sensor_msgs/Joy
         hpl:
             properties:
-                - 'globally: some /joy_teleop/joy {button[0] in [0,1,2,3,4]}'
+                - 'globally: no /joy_teleop/joy {button[0] not in [0,1,2,3,4]}'
 
 
     teleop_twist_joy/teleop_node:
@@ -37,7 +37,6 @@ nodes:
             properties: 
                 - 'globally: /joy_teleop/cmd_vel {linear.x in 1 to 100}
                     requires /joy_teleop/joy {button[0] = 0}'
-                - 'globally: some /joy_teleop/joy {button[0] in [0,1,2,3,4]}'
 
     agrobv16_supervisor/agrobv16_supervisor_node:
         rosname: agrobv16SUPERVISOR
