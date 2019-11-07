@@ -121,7 +121,7 @@ class MC_Interface(object):
 	def __instance_to_html(self,instance):
 		html = ""
 		states = instance.states
-		for i in range(1,len(states)): # range change a ver se da mais o ultimo resultado
+		for i in range(1,len(states)): 
 			previous_state = states[i-1]
 			actual_state = states[i]
 			html += self.__state_to_html(previous_state,actual_state,i)
