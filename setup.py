@@ -6,6 +6,8 @@ def install():
 	os.mkdir(environment_dir, mode)
 	cmd = "cp ./electrum/electrum_pi.jar /plugin_mc/"
 	os.system(cmd)
+	cmd = "cp plugin.yaml /plugin_mc/"
+	os.system(cmd)
 
 
 if __name__=="__main__":

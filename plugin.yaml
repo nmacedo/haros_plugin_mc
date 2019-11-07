@@ -36,3 +36,9 @@ supported_rules:
     - mi_below_65
 supported_metrics:
     - maintainability_index
+
+scope:
+    Time: 10
+    Message: 9
+    Value: 4
+

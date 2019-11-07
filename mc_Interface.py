@@ -5,7 +5,7 @@ from .mc.result import *
 from .mc.ast import *
 from interval import *
 import re
-
+import yaml
 
 class HTML(object):
 	def __init__(self):
@@ -21,7 +21,12 @@ class HTML(object):
 
 class MC_Interface(object):
 	def __init__(self,conf_name,nodes,topics,properties=None):
-		self.architecture = Architecture(conf_name,nodes,topics,properties=properties)
+		scopes = dict()
+		with open("/plugin_mc/plugin.yaml") as f:
+			data = f.read()
+			l = yaml.load(data)
+			scopes = l['scope']
+		self.architecture = Architecture(conf_name,nodes,topics,scopes,properties=properties)
 		self.run_dir = os.getcwd()
 		self.results = None
 		self.html = HTML()
@@ -96,9 +101,9 @@ class MC_Interface(object):
 		if received_list == [] and sent_list == []:
 			return html
 		for r in received_list:
-			html +=	self.html.item("The " + str(node_name) + " receives a Message { " + str(r[0]) + " } through " + str(r[1]) + " Topic ")
+			html +=	self.html.item("The " + str(node_name) + " receives a Message { " + str(r[0]) + " } through the " + str(r[1]) + " Topic")
 		for s in sent_list:
-			html += self.html.item("The " + str(node_name) + " sends a Message { " + str(s[0]) + " } through " + str(s[1]) + " Topic ")
+			html += self.html.item("The " + str(node_name) + " sends a Message { " + str(s[0]) + " } through the " + str(s[1]) + " Topic")
 		return html
 
 
@@ -126,7 +131,10 @@ class MC_Interface(object):
 	def __concrete_name(self,result):
 		prop_name = result.property_name
 		hpl_name = "'" + self.architecture.get_hpl_prop(str(prop_name)) + "'"
-		html = self.html.header("Property: " + str(hpl_name), 4) 
+		html = self.html.header("Property: " + str(hpl_name), 4)
+		html += self.html.header("For: " + str(self.architecture.value_scope) + " Values, " +
+					str(self.architecture.message_scope) + " Messages and " + 
+					str(self.architecture.time_scope) + " Time",4) 
 		return html 
 
 	def __sat_html(self,result):

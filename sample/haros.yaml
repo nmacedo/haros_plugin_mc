@@ -96,7 +96,6 @@ nodes:
                     requires /supervisor/cmd_vel {linear.x = $V.linear.x} || /joy_teleop/cmd_vel {linear.x = $V.linear.x}'
 
 
-
 configurations:
     startup:
         launch:

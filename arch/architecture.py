@@ -50,7 +50,7 @@ class Architecture:
 			"\tno (outbox + inbox)\n" +
 			"}\n\n")
 
-	def __init__(self,config_name,nodes,topics,properties=None,meta=None):
+	def __init__(self,config_name,nodes,topics,scopes,properties=None,meta=None):
 		# Structure
 		self.config_name = config_name	# Configuration Name
 		self.meta = self.ros_model if meta is None else meta
@@ -65,9 +65,9 @@ class Architecture:
 		self.__create_axioms(nodes)					
 		self.__properties = self.__create_properties(properties,self.CHECK)
 		# Computing Scopes
-		self.value_scope = 4
-		self.message_scope = 9
-		self.time_scope = 10
+		self.value_scope = scopes['Value']
+		self.message_scope = scopes['Message']
+		self.time_scope = scopes['Time']
 		# Reducing Structure
 		self.__prune_structure()
 	
