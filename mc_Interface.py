@@ -148,6 +148,7 @@ class MC_Interface(object):
 		#			str(self.architecture.time_scope) + " Time",4) 
 		return html 
 
+
 	def __sat_html(self,result):
 		html = "<br>"
 		html += self.__concrete_name(result)
