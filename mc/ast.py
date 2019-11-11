@@ -1,5 +1,4 @@
 import re
-# Ver como a cena dos valores esta a ser metida na estrutura, e pensar como se vai poder utilizar isto
 class ResultCollection():
 	def __init__(self):
 		self.results = dict()
@@ -28,7 +27,7 @@ class SatResult(ResultObject):
 		self.property_type = t
 		self.property_name = property_name
 		self.scope = scope 					#Scope Object
-		self.result = instance_obj
+		self.result = instance_obj			#Instance()
 	
 
 class Scope():
@@ -43,7 +42,13 @@ class Instance():
 	def __init__(self,states):
 		self.states = states	#[State]	
 	
-	
+	def debug(self):
+		r = ""
+		for i in range(0,len(self.states)):
+			r += "------- State " + str(i) + " --------\n"
+			r += self.states[i].debug()
+		return r
+
 
 class State():
 	def __init__(self,inbox=[],outbox=[],values=[],topics=[]):
@@ -85,3 +90,10 @@ class State():
 			new_outbox.append((node_name,message_id))
 		self.inbox = new_inbox
 		self.outbox = new_outbox
+
+	def debug(self):
+		r = "\tValues: " + str(self.values) + "\n"
+		r += "\tTopics: " + str(self.topics) + "\n"
+		r += "\tInbox: " + str(self.inbox) + "\n"
+		r += "\tOutbox: " + str(self.outbox) + "\n"
+		return r
