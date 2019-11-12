@@ -329,7 +329,7 @@ class Architecture:
 
 
 	# HplProperty -> Property + Exception		
-	def __conversion(self,p,t=None):
+	def __conversion(self,p,t=None,sig=None):
 		scope_type = p.scope.scope_type
 		if scope_type == self.GLOBAL:
 			if t==self.CHECK or t==self.AXIOM:		
@@ -348,8 +348,8 @@ class Architecture:
 				if pattern == self.REQUIREMENT: 
 					event0 = o.behaviour
 					event1 = o.trigger
-					observable = self.__create_Require(event0,event1)		
-				pr = Property(self.pc,t,observable)
+					observable = self.__create_Require(event0,event1)	
+				pr = Property(self.pc,t,observable,sig=sig)
 				p_name = "prop_" + str(self.pc)
 				self.__prop_el_map.update({p_name:p})		
 				if t == self.CHECK:
@@ -360,11 +360,11 @@ class Architecture:
 		
 
 	# [HplProperty] -> [Property] + Exception
-	def __create_properties(self,properties,t):
+	def __create_properties(self,properties,t,sig=None):
 		if properties is None:
 			return []
 		else:
-			return map ((lambda x : self.__conversion(x,t)) , properties)
+			return map ((lambda x : self.__conversion(x,t,sig)) , properties)
 
 
 	# [HplProperty] -> Void
@@ -373,7 +373,8 @@ class Architecture:
 			node = resource.node
 			properties = node.hpl_properties
 			if properties != []:
-				pl = self.__create_properties(properties,self.AXIOM)
+				node_name = resource.rosname.full.replace('/','_')
+				pl = self.__create_properties(properties,self.AXIOM,sig=node_name)
 				node_obj = self.__nodes[resource.rosname.full]
 				node_obj.add_axioms(pl)
 

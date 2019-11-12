@@ -43,11 +43,12 @@ class Observable:
 		self.trigger = trigger 	   #Should appear 
 
 
-	def spec(self): 
+	def spec(self,node=None): 
+		node = "Node" if node is None else node
 		if self.pattern == self.EXISTENCE:#globally some ==> always some
 			behaviours_specs = []
 			for e in self.behaviour:
-				spec = ("(some m0: Node.outbox & " + "topic."+ e.topic.replace('/','_') +" | (" + e.spec() + "))")
+				spec = ("(some m0: " + str(node) + ".outbox & " + "topic."+ e.topic.replace('/','_') +" | (" + e.spec() + "))")
 				behaviours_specs.append(spec)
 			s = "(" + " or ".join(behaviours_specs) + ")"
 			return s
@@ -55,7 +56,7 @@ class Observable:
 		if self.pattern == self.ABSENCE:  #globally no ==> always no
 			behaviours_specs = []
 			for e in self.behaviour:
-				spec = "(no m0: Node.outbox & " + "topic."+e.topic.replace('/','_') +" | (" + e.spec() + "))"
+				spec = "(no m0: " + str(node) + ".outbox & " + "topic."+e.topic.replace('/','_') +" | (" + e.spec() + "))"
 				behaviours_specs.append(spec)
 			s = "(" + " or ".join(behaviours_specs) + ")"
 			return s
@@ -63,20 +64,20 @@ class Observable:
 		if self.pattern == self.REQUIREMENT: #globally e1 requires e0 ==> always e1 implies before once e0
 			trigger_specs = []
 			for t in self.trigger:
-				spec = "(some m0: Node.inbox & topic."+t.topic.replace('/','_')+ "| (" + t.spec() + "))"
+				spec = "(some m0: " + str(node) + ".inbox & topic."+t.topic.replace('/','_')+ "| (" + t.spec() + "))"
 				trigger_specs.append(spec)
 			trigger_spec = "(" + " or ".join(trigger_specs) + ")"
 
 			if len(self.behaviour) < 2:
 				if self.behaviour[0].alias is not None:
-					s = ("all m1: Node.outbox &  topic." +self.behaviour[0].topic.replace('/','_') +
+					s = ("all m1: " + str(node) + ".outbox &  topic." +self.behaviour[0].topic.replace('/','_') +
 						" | (" + self.behaviour[0].spec() + ")")
 					s += (" \n\t\t\timplies before once (" + trigger_spec + ")")	
 					return s
 		
 			behaviours_specs = []
 			for e in self.behaviour:
-				spec = ("(some m1: Node.outbox & " + "topic."+e.topic.replace('/','_') +
+				spec = ("(some m1: " + str(node) + ".outbox & " + "topic."+e.topic.replace('/','_') +
 				" | (" + e.spec() + "))")
 				behaviours_specs.append(spec)
 
@@ -88,20 +89,20 @@ class Observable:
 		if self.pattern == self.RESPONSE:	# globally e0 causes e1 ==> always e1 implies eventually e2
 			behaviour_specs = []
 			for b in self.behaviour:
-				spec = "(some m1: Node.outbox & topic."+b.topic.replace('/','_')+ "| (" + b.spec() + "))"
+				spec = "(some m1: " + str(node) + ".outbox & topic."+b.topic.replace('/','_')+ "| (" + b.spec() + "))"
 				behaviour_specs.append(spec)
 			behaviour_spec = "(" + " or ".join(behaviour_specs) + ")"
 
 			if len(self.trigger) < 2:
 				if self.trigger[0].alias is not None:
-					s = ("all m0: Node.inbox &  topic." +self.trigger[0].topic.replace('/','_') +
+					s = ("all m0: " + str(node) + ".inbox &  topic." +self.trigger[0].topic.replace('/','_') +
 						" | (" + self.trigger[0].spec() + ")")
 					s += (" \n\t\t\timplies eventually (" + behaviour_spec + ")")	
 					return s
 		
 			triggers_specs = []
 			for t in self.trigger:
-				spec = ("(some m0: Node.inbox & " + "topic."+t.topic.replace('/','_') +
+				spec = ("(some m0: " + str(node) + ".inbox & " + "topic."+t.topic.replace('/','_') +
 				" | (" + t.spec() + "))")
 				triggers_specs.append(spec)
 			s = "(" + " or ".join(triggers_specs) + ")"
@@ -114,11 +115,11 @@ class Property:
 	CHECK = 1
 	AXIOM = 2
 
-	def __init__(self,pc,t,observable,node=None):
+	def __init__(self,pc,t,observable,node=None,sig=None):
 		self.pc = pc
 		self.observable = observable
 		self.type = t
-		self.node = node
+		self.node = sig
 
 	def spec(self):
 		if self.type == self.CHECK:
@@ -127,6 +128,6 @@ class Property:
 			s += "} "
 			return s
 		if self.type == self.AXIOM:
-			s = "always { " + self.observable.spec() + " }\n\n"
+			s = "always { " + self.observable.spec(node=self.node) + " }\n\n"
 			return s
 

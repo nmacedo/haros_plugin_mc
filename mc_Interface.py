@@ -104,9 +104,9 @@ class MC_Interface(object):
 		if received_list == [] and sent_list == []:
 			return html
 		for s in sent_list:
-			html += self.html.item("The " + str(node_name) + " sends a Message { " + str(s[0]) + " } through the " + str(s[1]) + " Topic")
+			html += self.html.item("The " + str(node_name) + " sends { " + str(s[0]) + " } through the " + str(s[1]) + " Topic")
 		for r in received_list:
-			html +=	self.html.item("The " + str(node_name) + " receives a Message { " + str(r[0]) + " } through the " + str(r[1]) + " Topic")
+			html +=	self.html.item("The " + str(node_name) + " receives { " + str(r[0]) + " } through the " + str(r[1]) + " Topic")
 		return html
 
 
