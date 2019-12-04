@@ -22,13 +22,16 @@ class Architecture:
 			"\tvar outbox : set Message\n" +
 			"}\n\n" +
 			"abstract sig Topic {}\n\n" +
+			"abstract sig Field {}\n\n" +
 			"sig Message {\n" +
 			"\ttopic : one Topic,\n" +	
-			"\tvalue : one  Value\n" +
+			"\tvalue : Field ->  Value\n" +
+			"}{\n" + "\tall f:Field | lone f.value" +
+			"\n\tsome value\n" + 
 			"}\n\n" +
 			"abstract sig Value {}\n\n" +
 			"fact Messages {\n\n" +
-			"\tall n : Node | always {\n"			
+			"\tall n : Node | always {\n" +			
 			"\t\tn.inbox.topic in n.subscribes\n" +
 			"\t\tn.outbox.topic in n.advertises\n" +
 			"\t}\n" +
@@ -37,7 +40,7 @@ class Architecture:
 			"\t}\n" +
 			"\talways {\n" +
 			"\t\tall m : Node.outbox | eventually m not in Node.outbox\n" +
-			"\t}\n" 
+			"\t}\n" +
 			"\tall m : Message, t: m.topic | always{\n" +	
 			"\t\tm in Node.inbox implies (some n : advertises.(m.topic) | before once (m in n.outbox and m.topic = t))\n" + 
 			"\t}\n" +
@@ -97,16 +100,14 @@ class Architecture:
 
 	# 1st Msg_Filter_Grammar validation
 	def __validate_field(self,f,topic):
-		if topic in self.__fields.keys():
-			valid_field = self.__fields[topic]
-			if f.token == valid_field.token:
-				return True
-			else:
-				print("[MC] Unsupported Field Use.")
-				raise Exception('Unsupported Field Use.')
-		else:
-			self.__fields.update({topic:f})
-			return True
+		if topic in self.__topics.keys():
+			topic_obj = self.__topics[topic]
+			# f.token
+			topic_obj.add_field(f.token)
+			self.__topics.update({topic:topic_obj})
+			field_obj = Field(f)
+			self.__fields.update({f.token:field_obj})
+
 
 	# 2st Msg_Filter_Grammar validation
 	def __validate_operator(self,op):
@@ -171,7 +172,7 @@ class Architecture:
 			lower = hpl_value.lower_bound
 			upper = hpl_value.upper_bound
 			if lower.is_reference or upper.is_reference:
-				print("[MC] sUnsupported Use of References.")
+				print("[MC] Unsupported Use of References.")
 				raise Exception ('Unsupported Use of References.')
 			lower_value = lower.value
 			upper_value = upper.value
@@ -260,19 +261,19 @@ class Architecture:
 				for v in vl:
 					new_condition = None
 					if conditions_type == 1:
-						new_condition = Condition("m0",c.operator,v)
+						new_condition = Condition("m0",c.operator,v,field=c.field.token)
 					if conditions_type == 2:
-						new_condition = Condition("m1",c.operator,v)
+						new_condition = Condition("m1",c.operator,v,field=c.field.token)
 					if conditions_type == 3:
 						if v==self.REFERENCE:
-							new_condition = Condition("m0",c.operator,"m1")
+							new_condition = Condition("m0",c.operator,"m1",field=c.field.token)
 						else:
-							new_condition = Condition("m0",c.operator,v)
+							new_condition = Condition("m0",c.operator,v,field=c.field.token)
 					if conditions_type == 4:
 						if v==self.REFERENCE:
-							new_condition = Condition("m1",c.operator,"m0")
+							new_condition = Condition("m1",c.operator,"m0",field=c.field.token)
 						else:
-							new_condition = Condition("m1",c.operator,v)
+							new_condition = Condition("m1",c.operator,v,field=c.field.token)
 					conditions.append(new_condition)
 			if negation is True:
 				is_set = not is_set		# Negation
@@ -462,6 +463,12 @@ class Architecture:
 				topic = t
 				return self.__fields[topic]
 		return None	
+	
+	def get_field(self,field_name):
+		for k in self.__fields.keys():
+			if self.__fields[k].field_name == field_name:
+				return k
+		return "NOT FOUND"
 
 	def get_root_value(self,st):
 		value_abs_name = st.strip()
@@ -493,6 +500,10 @@ class Architecture:
 		for k in self.__values.keys():
 			value_obj = self.__values[k]	
 			spec += value_obj.spec()
+		spec += "------- Fields -------\n\n"
+		for k in self.__fields.keys():
+			field_obj = self.__fields[k]
+			spec += field_obj.spec()
 		spec += "------- Topics -------\n\n"
 		for k in self.__topics.keys():
 			topic_obj = self.__topics[k]

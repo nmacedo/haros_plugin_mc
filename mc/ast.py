@@ -50,9 +50,14 @@ class Instance():
 		return r
 
 
+class Field():
+	def __init__(self,field_name,values):
+		self.field_name = field_name
+		self.values = values
+
 class State():
 	def __init__(self,inbox=[],outbox=[],values=[],topics=[]):
-		self.values = dict()	# dict{Message_id : [value_name]}
+		self.values = dict()	# dict{Message_id : [Field]} 	
 		self.topics = dict()	# dict{Message_id : topic_name}
 		self.inbox = []			# node_name -> Message_id
 		self.outbox = []		# node_name -> Message_id
@@ -63,12 +68,15 @@ class State():
 	def remove_id(self,s):
 		return re.sub(r"\$[0-9]+","",s)
 	
-	#[(Message_name$id, Value_name$id)] -> Void
 	def set_values(self,values):
 		for v in values:
 			message_id = v[0]
-			value_name = v[1]		# Tratar destes valores 
-			self.values.update({message_id:value_name})
+			new_field = Field(v[1],v[2])
+			fields = [new_field]
+			if message_id in self.values.keys():
+				fields = self.values.get(message_id)
+				fields.append(new_field)
+			self.values.update({message_id:fields})
 
 	def set_topics(self,topics):
 		for t in topics:

@@ -34,31 +34,44 @@ class MC_Interface(object):
 		self.run_dir = os.getcwd()
 		self.results = None
 		self.html = HTML()
-		#print(self.architecture.spec())
+		print(self.architecture.spec())
 		
 	def __extract_root(self,v):
 		l = re.split(r'(_[0-9]+)',v)
 		return l[0]
 
 	def __which_value(self,m,s):
+		result = []
 		l = s.values[m]
-		r = ""		
-		root_value = self.__extract_root(l[0])
-		if root_value in l:
-			l.remove(root_value)
-		root_value_obj = self.architecture.get_root_value(root_value)
-		field = self.architecture.get_field_by_value(root_value_obj)
-		if isinstance(root_value_obj,String):	# It's String
-			string = root_value_obj.concrete_values[l[0]]
-			r = str(field) + " = " + str(string)
-		else:									# It's Numeric
-			smallest_range = self.architecture.get_bottom_range(root_value_obj, l)				
-			if isinstance(smallest_range,interval):
-				if (smallest_range[0].inf == smallest_range[0].sup):
-					r = str(field) + " = " + str(smallest_range[0].inf)
-				else:
-					r = str(field) + " in " + str(smallest_range[0].inf) + " to " + str(smallest_range[0].sup) 
-		return r
+		
+		for f in l:
+			r = ""		
+			root_value = self.__extract_root(f.values[0])
+			if root_value in (f.values):
+				(f.values).remove(root_value)
+
+
+			root_value_obj = self.architecture.get_root_value(root_value)
+			field = self.architecture.get_field(str(f.field_name)) # ir buscar o field string
+			
+			if isinstance(root_value_obj,String):	# It's String
+				string = root_value_obj.concrete_values[f.values[0]]
+				r = str(field) + " = " + str(string)
+			else:									# It's Numeric
+				smallest_range = self.architecture.get_bottom_range(root_value_obj, f.values)				
+				if isinstance(smallest_range,interval):
+					if (smallest_range[0].inf == smallest_range[0].sup):
+						r = str(field) + " = " + str(smallest_range[0].inf)
+					else:
+						r = str(field) + " in " + str(smallest_range[0].inf) + " to " + str(smallest_range[0].sup) 
+			result.append(r)
+
+		st = (', '.join(result))
+		return st
+
+
+
+
 
 	def __which_topic(self,m,s):
 		l = s.topics[m]

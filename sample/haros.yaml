@@ -23,7 +23,10 @@ nodes:
             /joy_teleop/joy: sensor_msgs/Joy
         hpl:
             properties:
-                - 'globally: no /joy_teleop/joy {button[0] not in [0,1,2,4,8]}'
+                - 'globally: no /joy_teleop/joy {button[0] not in [0,1]}' 
+                - 'globally: no /joy_teleop/joy {button[1] not in [0,1]}'
+                - 'globally: no /joy_teleop/joy {button[4] not in [0,1]}'
+                - 'globally: no /joy_teleop/joy {button[5] not in [0,1]}'
 
 
     teleop_twist_joy/teleop_node:
@@ -50,25 +53,23 @@ nodes:
             /agrobv16/max_velocity: geometry_msgs
         hpl:
             properties:
-                - 'globally: no /agrobv16/current_state {data[0] not in [0,3,6]}'            
+                - 'globally: no /agrobv16/current_state {data[0] not in [0,3,6]}'           
                 - 'globally: /agrobv16/current_state {data[0] = 6}
-                   requires /joy_teleop/joy {button[0] = 1}'             
+                   requires /joy_teleop/joy {button[0] = 1}'               
                 - 'globally: /agrobv16/current_state {data[0] = 3}
-                    requires /joy_teleop/joy {button[0] = 2}'
+                    requires /joy_teleop/joy {button[0] = 0, button[1] = 1}'      
                 - 'globally: /agrobv16/current_state {data[0] = 0}
-                    requires /joy_teleop/joy {button[0] in [0,4,8]}'               
+                    requires /joy_teleop/joy {button[0] = 0, button[1] = 0}'  
                 - 'globally: /agrobv16/max_velocity {linear.x = 0}
                     requires /scan {ranges[0] in 0 to 40}'               
                 - 'globally: no /supervisor/cmd_vel {linear.x not in 0 to 100}'             
-                - 'globally: /joy_teleop/joy {button[0] = 2}
-                    causes /supervisor/cmd_vel {linear.x in 0 to 100}' 
-                - 'globally: no /supervisor/cmd_vel {linear.x not in 0 to 100}'  
-                - 'globally: /supervisor/cmd_vel {linear.x in 0 to 100}
-                    requires /joy_teleop/joy {button[0] in [2,4,8]}'
+                - 'globally: /supervisor/cmd_vel {linear.x in 42 to }'        
                 - 'globally: /supervisor/cmd_vel {linear.x in 42 to 62, linear.x not in 38 to 58}
                     requires /joy_teleop/joy {button[0] in [2,8]}'
                 - 'globally: /supervisor/cmd_vel {linear.x in 38 to 58, linear.x not in 42 to 62}
                     requires /joy_teleop/joy {button[0] in [2,4]}'
+
+        
 
 
     agrobv16_supervisor/twist_mux:
@@ -83,14 +84,6 @@ nodes:
             properties:
                 - 'globally: /husky_velocity_controller/cmd_vel {linear.x != 0}
                     requires /agrobv16/max_velocity {linear.x != 0}'
-                - 'globally: /agrobv16/max_velocity {linear.x = 0}
-                    causes /husky_velocity_controller/cmd_vel {linear.x = 0}'
-                - 'globally: /husky_velocity_controller/cmd_vel {linear.x = 0}
-                    requires /agrobv16/max_velocity {linear.x = 0}'
-                - 'globally: /supervisor/cmd_vel {linear.x in 1 to 100} as E
-                    causes /husky_velocity_controller/cmd_vel {linear.x = $E.linear.x}'
-                - 'globally : /husky_velocity_controller/cmd_vel {linear.x != 0} as V
-                    requires /supervisor/cmd_vel {linear.x = $V.linear.x} || /joy_teleop/cmd_vel {linear.x = $V.linear.x}'
 
 
 configurations:
@@ -120,11 +113,9 @@ configurations:
         hpl:
             properties:
                 - 'globally: /agrobv16/current_state {data[0] = 3}
-                    requires /joy_teleop/joy {button[0] = 2}'
+                    requires /joy_teleop/joy {button[1] = 1 }'
                 - 'globally: /agrobv16/current_state {data[0] = 6}
                     requires /joy_teleop/joy {button[0] = 1}'
-                - 'globally: /husky_velocity_controller/cmd_vel {linear.x = 0}
-                    requires /scan {ranges[0] in 0 to 40}'
-                - 'globally: /husky_velocity_controller/cmd_vel {linear.x in 1 to 100}
-                    requires /joy_teleop/joy {button[0] in [0,1,2]}'
+                - 'globally: /agrobv16/current_state {data[0] = 0}
+                    requires /joy_teleop/joy {button[1] = 0, button[0] = 0}'
 

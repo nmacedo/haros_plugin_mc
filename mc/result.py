@@ -22,14 +22,33 @@ class Interpreter(resultListener):
 		for x in f:
 			aux = x.split('->')
 			aux[0] = aux[0].replace(' ','')	
-			aux[1] = aux[1].replace(' ','')	
+			aux[1] = aux[1].replace(' ','')
 			new_f.append((aux[0] , aux[1]))
 		f = new_f
 		return f
+
+	def field_to_triple(self,field,regex):
+		f = ''.join(field)
+		f = re.sub(regex,"",f)
+		if f != '':
+			f = f.split(',')
+		else:
+			f = []
+		new_f = []
+		for x in f:
+			aux = x.split('->')
+			aux[0] = aux[0].replace(' ','')	
+			aux[1] = aux[1].replace(' ','')
+			aux[2] = aux[2].replace(' ','')	
+			new_f.append((aux[0] , aux[1], aux[2]))
+		f = new_f
+		return f
+
 	def ext_sig(self,s):
 		new_s = re.sub(r"this/","",s)
 		new_s = re.sub(r"={.*}","",new_s)
 		return new_s
+
 	def search_value(self,v_id,st_txt):
 		fl = filter(lambda x: v_id in x, st_txt)
 		fl = filter(lambda x: 'univ' not in x, fl)
@@ -50,9 +69,14 @@ class Interpreter(resultListener):
 		new_values = []
 		for v in values:
 			m_id = v[0]
-			v_id = v[1]
+			aux = v[1].split('$')
+			f_id = aux[0]
+			v_id = v[2]
+
 			abs_l = self.search_value(v_id,lines)
-			new_values.append((m_id,abs_l))
+			new_values.append((m_id,f_id,abs_l))
+
+
 		return new_values
 
 	def transform_topics(self,topics,lines):
@@ -72,12 +96,15 @@ class Interpreter(resultListener):
 		outbox = self.field_to_tuple(filter(lambda x: 'this/Node<:outbox' in x,lines),
 						"(this/Node<:outbox={)|}")	
 		# Values
-		values = self.field_to_tuple(filter(lambda x: 'this/Message<:value' in x,lines),
+		values = self.field_to_triple(filter(lambda x: 'this/Message<:value' in x,lines),
 						"(this/Message<:value={)|}")
 		values = self.transform_values(values,lines)
+
 		# Topics
+
 		topics = self.field_to_tuple(filter(lambda x: 'this/Message<:topic' in x,lines),
 						"(this/Message<:topic={)|}")
+
 		topics = self.transform_topics(topics,lines)
 
 		state_obj = State(inbox=inbox,outbox=outbox,values=values,topics=topics)
@@ -118,6 +145,7 @@ class Parser():
 	def parse(self):
 		with open(self.file_name) as f:
 			data = f.read()
+
 		inputStream = antlr4.InputStream(data)
 		lexer = resultLexer(inputStream)
 		stream = antlr4.CommonTokenStream(lexer)

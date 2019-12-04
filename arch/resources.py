@@ -122,6 +122,19 @@ class String(Value):
 		return spec
 
 
+class Field:
+	def __init__(self,f):
+		self.token = f
+		token = f.token.replace('[','_')
+		token = token.replace(']','_')
+		token = token.replace('.','_')
+		self.field_name = token
+
+	def spec(self):
+		field_declaration = "one sig " + str(self.field_name) + " extends Field{}\n\n"
+		return field_declaration
+
+
 # Abstract Interpretation of a Topic RunTime Resource.
 class Topic:
 	def __init__(self,topic):
@@ -131,13 +144,33 @@ class Topic:
 		# ROS ALLOY
 		self.signature = topic.rosname.full.replace('/','_')
 		self.value = topic.type.replace('/','_')
+		self.fields = dict()
 	
+	def add_field(self,f):
+		f = str(f)
+		if f not in self.fields.keys():
+			field_name = f.replace('[','_')
+			field_name = field_name.replace(']','_')
+			field_name = field_name.replace('.','_')
+			self.fields.update({f:field_name})
+			return True
+		return False
+		
 	def spec(self):
 		declaration = ("one sig " + self.signature + " extends Topic{}\n")
+		
+
 		message_fact = ("fact " + self.signature + "_messages {\n" +
-				"\tall m:topic." + self.signature + " | m.value in " + 
+				"\tall m:topic." + self.signature + " | Field.(m.value) in " + 
 				self.value + "\n}\n\n")
-		return (declaration + message_fact)
+		
+		fields_fact = ""
+		if self.fields.values() != []:		# Has to be refeered
+			fields_fact = ("fact " + self.signature + "_fields {\n" +
+					"\tall m:topic." + self.signature + " | (m.value).Value in (" + '+'.join(self.fields.values()) + ")"
+					+ "\n}\n\n")
+
+		return (declaration + message_fact + fields_fact)
 
 # Abstract Interpretation of a Node RunTime Process.
 class Node:

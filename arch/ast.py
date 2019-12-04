@@ -1,21 +1,33 @@
 class Condition:
-	def __init__(self,lhs,operator,rhs):
+	def __init__(self,lhs,operator,rhs,field=None):
 		self.lhs = lhs
 		self.operator = operator
 		self.rhs = rhs
+		self.field = self.clean_string(field)
 	
+
+	def clean_string(self,f):
+		field_name = f.replace('[','_')
+		field_name = field_name.replace(']','_')
+		field_name = field_name.replace('.','_')
+		return field_name
+
 	def spec(self):
+		s = ""
 		if self.lhs == "m0" or self.lhs == "m1":
 			if self.rhs == "m0" or self.rhs == "m1":
-				s= self.lhs + ".value " + self.operator + " " + self.rhs + ".value"
-				return s
+				s= self.field + ".(" + self.lhs + ".value) " + self.operator + " " + self.field + ".(" + self.rhs + ".value)"
 			else:
 				if(self.operator == "="):
 					self.operator = "in"
 				if(self.operator == "!="):
 					self.operator = "not in"
-				s = self.lhs + ".value " + self.operator + " " + self.rhs
-				return s
+				s = self.field + ".(" + self.lhs + ".value) " + self.operator + " " + self.rhs	
+		if self.field is not None:
+			s += " and some " + str(self.field) + ".(" + self.lhs + ".value)"
+		return s
+
+
 
 class Event:		
 	PUBLISH = 1
@@ -29,6 +41,7 @@ class Event:
 	def spec(self):
 		s = self.relation.join(map(lambda x: x.spec(), self.conditions))
 		return s
+
 
 
 class Observable:
