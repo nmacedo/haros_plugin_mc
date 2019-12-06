@@ -247,9 +247,6 @@ class Architecture:
 		return events
 
 
-
-		
-
 	# [Hpl_Event] -> [Event]
 	def __generate_events(self,hpl_events,negation=False,conditions_type=1):
 		events = []

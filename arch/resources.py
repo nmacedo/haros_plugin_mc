@@ -167,7 +167,7 @@ class Topic:
 		fields_fact = ""
 		if self.fields.values() != []:		# Has to be refeered
 			fields_fact = ("fact " + self.signature + "_fields {\n" +
-					"\tall m:topic." + self.signature + " | (m.value).Value in (" + '+'.join(self.fields.values()) + ")"
+					"\tall m:topic." + self.signature + " | (m.value).Value = (" + '+'.join(self.fields.values()) + ")"
 					+ "\n}\n\n")
 
 		return (declaration + message_fact + fields_fact)

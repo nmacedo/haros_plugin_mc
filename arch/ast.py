@@ -23,8 +23,8 @@ class Condition:
 				if(self.operator == "!="):
 					self.operator = "not in"
 				s = self.field + ".(" + self.lhs + ".value) " + self.operator + " " + self.rhs	
-		if self.field is not None:
-			s += " and some " + str(self.field) + ".(" + self.lhs + ".value)"
+		#if self.field is not None:
+			#s += " and some " + str(self.field) + ".(" + self.lhs + ".value)"
 		return s
 
 
