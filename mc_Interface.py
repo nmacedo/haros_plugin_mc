@@ -34,7 +34,7 @@ class MC_Interface(object):
 		self.run_dir = os.getcwd()
 		self.results = None
 		self.html = HTML()
-		#print(self.architecture.spec())
+		print(self.architecture.spec())
 		
 	def __extract_root(self,v):
 		l = re.split(r'(_[0-9]+)',v)

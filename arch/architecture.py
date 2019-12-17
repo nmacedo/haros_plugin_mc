@@ -117,6 +117,11 @@ class Architecture:
 			print("[MC] Unsupported Operator Use.")
 			raise Exception('Unsupported Operator Use.')
 
+	def __intostr(self,v):
+		s = str(int(v))
+		s = s.replace('-',"minus")
+		return s
+
 
 	# 3st Msg_Filter_Grammar validation (informs structural architecture)
 	def __validate_value(self,hpl_value,topic):	
@@ -136,14 +141,16 @@ class Architecture:
 			real_value = hpl_value.value
 			if isinstance(real_value, (int,long,float)):
 				if isinstance(root_value_obj,Num):
-					sub_signature_name = root_value_obj.signature + "_" + str(int(real_value))
+					real_value_string = self.__intostr(real_value)
+					sub_signature_name = root_value_obj.signature + "_" + real_value_string
 					root_value_obj.add_extension(sub_signature_name,
 												interval(real_value))
 					return is_set, [sub_signature_name]
 				else:
 					signature = root_value_obj.signature		
 					new_root_value_obj = Num(signature,message_type)
-					sub_signature_name = signature + "_" + str(int(real_value))
+					real_value_string = self.__intostr(real_value)
+					sub_signature_name = signature + "_" + real_value_string
 					new_root_value_obj.add_extension(sub_signature_name,
 													interval(real_value))
 					self.__values.update({message_type: new_root_value_obj})
@@ -177,16 +184,20 @@ class Architecture:
 			lower_value = lower.value
 			upper_value = upper.value
 			if isinstance(root_value_obj,Num):
-				sub_signature_name = (root_value_obj.signature + "_" + str(int(lower_value)) + "_" +
-									str(int(upper_value)))
+				lower_value_string = self.__intostr(lower_value)
+				upper_value_string = self.__intostr(upper_value)
+				sub_signature_name = (root_value_obj.signature + "_" + lower_value_string + "_" +
+									upper_value_string)
 				root_value_obj.add_extension(sub_signature_name,
 											interval([lower_value,upper_value]))
 				return is_set, [sub_signature_name]
 			else:
 				signature = root_value_obj.signature
 				new_root_value_obj = Num(signature,message_type)
-				sub_signature_name = (root_value_obj.signature + "_" + str(int(lower_value)) + "_" +
-									str(int(upper_value)))
+				lower_value_string = self.__intostr(lower_value)
+				upper_value_string = self.__intostr(upper_value)
+				sub_signature_name = (root_value_obj.signature + "_" + lower_value_string + "_" +
+									upper_value_string)
 				new_root_value_obj.add_extension(sub_signature_name,
 												interval([lower_value,upper_value]))
 				self.__values.update({message_type: new_root_value_obj})
@@ -204,14 +215,15 @@ class Architecture:
 				sub_signature_names = []
 				for v in values:
 					real_value = v.value
+					real_value_string = self.__intostr(real_value)
 					if isinstance(root_value_obj,Num):
-						sub_signature_name = root_value_obj.signature + "_" + str(real_value)
+						sub_signature_name = root_value_obj.signature + "_" + real_value_string
 						root_value_obj.add_extension(sub_signature_name,interval(real_value))
 						sub_signature_names.append(sub_signature_name)
 					else:
 						signature = root_value_obj.signature		
 						new_root_value_obj = Num(message_type,signature)
-						sub_signature_name = signature + "_" + str(real_value)
+						sub_signature_name = signature + "_" + real_value_string
 						new_root_value_obj.add_extension(sub_signature_name,
 														interval(real_value))
 						self.__values.update({message_type: new_root_value_obj})
