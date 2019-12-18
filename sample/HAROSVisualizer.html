@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+<!--
+Copyright (c) 2016 Andre Santos
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+    <title>HAROS Visualizer</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui">
+    <meta name="apple-mobile-web-app-status-bar-style" content="yes">
+    <link rel="shortcut icon" href="http://localhost:8080/favicon.png" type="image/x-icon">
+
+    <link rel="stylesheet" href="HAROSVisualizer_files/font-awesome.css">
+    <link rel="stylesheet" href="HAROSVisualizer_files/pure-min.css">
+    <link rel="stylesheet" href="HAROSVisualizer_files/grids-responsive-min.css">
+    <link rel="stylesheet" href="HAROSVisualizer_files/type.css">
+    <link rel="stylesheet" href="HAROSVisualizer_files/color.css">
+    <link rel="stylesheet" href="HAROSVisualizer_files/style.css">
+
+    <script src="HAROSVisualizer_files/jquery-2.js"></script>
+    <script src="HAROSVisualizer_files/underscore.js"></script>
+    <script src="HAROSVisualizer_files/backbone.js"></script>
+    <script src="HAROSVisualizer_files/d3.js"></script>
+    <script src="HAROSVisualizer_files/dagre.js"></script>
+    
+    <script src="HAROSVisualizer_files/app.js"></script>
+    <script src="HAROSVisualizer_files/models.js"></script>
+    <script src="HAROSVisualizer_files/general.js"></script>
+    <script src="HAROSVisualizer_files/dashboard.js"></script>
+    <script src="HAROSVisualizer_files/packages.js"></script>
+    <script src="HAROSVisualizer_files/issues.js"></script>
+    <script src="HAROSVisualizer_files/ros.js"></script>
+    <script src="HAROSVisualizer_files/help.js"></script>
+    <script src="HAROSVisualizer_files/routes.js"></script>
+</head>
+<body>
+    <!-- App Header -->
+    <div id="app-header">
+        <!--<div class="my-button badge-empty"><h2><i class="fa fa-flag-o"></i></h2></div>
+        <div class="my-button badge-empty"><h2><i class="fa fa-ellipsis-h"></i></h2></div>-->
+        <div class="navigation-menu">
+            <a id="navigation-dashboard" href="#dashboard" class=""><i class="fa fa-line-chart"></i> <span class="show-inline-lg">Dashboard</span></a>
+            <a id="navigation-packages" href="#packages"><i class="fa fa-folder"></i> <span class="show-inline-lg">Packages</span></a>
+            <a id="navigation-issues" href="#issues" class="selected"><i class="fa fa-bug"></i> <span class="show-inline-lg">Issues</span></a>
+            <a id="navigation-ros" href="#models" class=""><i class="fa fa-cogs"></i> <span class="show-inline-lg">Models</span></a>
+            <a id="navigation-help" href="#help"><i class="fa fa-question-circle"></i> <span class="show-inline-lg">Help</span></a>
+        </div>
+        <h1 class="title">HAROSviz</h1>
+    </div>
+
+    <!-- App Body -->
+    <div id="app">
+        <section id="dashboard" style="display: none;">
+            <div class="margin-h">
+                <label for="dashboard-project-select">
+                    <i class="fa fa-briefcase"></i>
+                    <strong class="show-inline-sm">Project</strong>
+                </label>
+                <select id="dashboard-project-select"><option selected="selected">agrob</option>
+<option>toy</option>
+<option>toy_startup</option></select>
+            </div>
+            <div class="pure-g">
+                <div class="pure-u-1 pure-u-sm-1-2 pure-u-lg-1-4">
+                    <div id="dashboard-panel-source" class="panel">
+                        <!-- http://mbostock.github.io/d3/talk/20111018/tree.html -->
+                        <div class="template-holder">
+        <a href="#packages"><h4 class="title"><i class="fa fa-file-code-o"></i> Source Code</h4></a>
+        <p class="item">
+            <span class="label">Packages</span>
+            <span class="badge-empty">5</span>
+        </p>
+        <p class="item">
+            <span class="label">Files</span>
+            <span class="badge-empty">181</span>
+        </p>
+        <p class="item">
+            <span class="label">Scripts</span>
+            <span class="badge-empty">6</span>
+        </p>
+    </div>
+                        <div class="diagram diagram-progress">
+                            <div class="pure-g item">
+                                <div class="pure-u-1-4 bold">C++</div>
+                                <div class="pure-u-1-2">
+                                    <div class="progress-bar margin-right">
+                                        <div class="progress bg-blue" style="left: 0px; right: 100%; display: block;"></div>
+                                        <div class="progress bg-yellow" style="left: 100%; right: 0px; display: block;"></div>
+                                    </div>
+                                </div>
+                                <div class="pure-u-1-4 text-right bold">Python</div>
+                            </div>
+                            <p class="item text-center bold">0% - 0%</p>
+                        </div>
+                    </div>
+                    <!-- https://www.jasondavies.com/coffee-wheel/ -->
+                    <div id="dashboard-panel-issues" class="panel">
+        <a href="#issues"><h4 class="title"><i class="fa fa-bug"></i> Issues</h4></a>
+        <p class="item">
+            <span class="label">Total issues</span>
+            <span class="badge-empty">2489</span>
+        </p>
+        <p class="item">
+            <span class="label">Coding standards</span>
+            <span class="badge-empty">2425</span>
+        </p>
+        <p class="item">
+            <span class="label">Code metrics</span>
+            <span class="badge-empty">104</span>
+        </p>
+        <p class="item">
+            <span class="label">Other issues</span>
+            <span class="badge-empty">0</span>
+        </p>
+        <p class="item">
+            <span class="label">Issues per line</span>
+            <span class="badge-empty">0.00</span>
+        </p>
+    </div>
+                </div>
+                <div class="pure-u-1 pure-u-sm-1-2 pure-u-lg-1-4">
+                    <div id="dashboard-panel-components" class="panel">
+        <a href="#components"><h4 class="title"><i class="fa fa-gears"></i> ROS Components</h4></a>
+        <p class="item">
+            <span class="label">Launch files</span>
+            <span class="badge-empty">44</span>
+        </p>
+        <p class="item">
+            <span class="label">Configurations</span>
+            <span class="badge-empty">6</span>
+        </p>
+        <p class="item">
+            <span class="label">Node count</span>
+            <span class="badge-empty">10</span>
+        </p>
+        <p class="item">
+            <span class="label">Nodelets</span>
+            <span class="badge-empty">0</span>
+        </p>
+        <p class="item">
+            <span class="label">Parameter files</span>
+            <span class="badge-empty">n/a</span>
+        </p>
+    </div>
+                    <div id="dashboard-panel-communications" class="panel">
+        <a href="#components"><h4 class="title"><i class="fa fa-exchange"></i> ROS Communications</h4></a>
+        <p class="item">
+            <span class="label">Topics</span>
+            <span class="badge-empty">n/a</span>
+        </p>
+        <p class="item">
+            <span class="label">Remappings</span>
+            <span class="badge-empty">n/a</span>
+        </p>
+        <p class="item">
+            <span class="label">Custom messages</span>
+            <span class="badge-empty">n/a</span>
+        </p>
+        <p class="item">
+            <span class="label">Custom services</span>
+            <span class="badge-empty">n/a</span>
+        </p>
+        <p class="item">
+            <span class="label">Custom actions</span>
+            <span class="badge-empty">n/a</span>
+        </p>
+    </div>
+                </div>
+                <div class="pure-u-1 pure-u-sm-1 pure-u-lg-1-2">
+                    <div id="dashboard-panel-progress" class="panel double-size">
+                        <h4 class="title"><i class="fa fa-line-chart"></i> Quality Progress</h4>
+                        <div class="flexbox margin-top">
+                            <select id="dashboard-metric-select" class="flexible margin-h">
+                                <option value="lines_of_code" selected="selected">Lines of Code</option>
+                                <option value="comments">Lines of Comments</option>
+                                <option value="issues">Number of Issues</option>
+                                <option value="standards">Coding Standards Issues</option>
+                                <option value="metrics">Metrics Issues</option>
+                                <option value="complexity">Avg. Cyclomatic Complexity</option>
+                                <option value="function_length">Avg. Function Length</option>
+                            </select>
+                        </div>
+                        <div class="chart" style="height: 292px;"><svg><g transform="translate(30,10)"><path class="line" d="M0,0L623,0"></path><g transform="translate(0,262)" fill="none" font-size="10" font-family="sans-serif" text-anchor="middle"><path class="domain" stroke="#000" d="M0.5,6V0.5H623.5V6"></path><g class="tick" opacity="1" transform="translate(0,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:07</text></g><g class="tick" opacity="1" transform="translate(56.63636363636364,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:08</text></g><g class="tick" opacity="1" transform="translate(113.27272727272728,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:09</text></g><g class="tick" opacity="1" transform="translate(169.9090909090909,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:10</text></g><g class="tick" opacity="1" transform="translate(226.54545454545456,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:11</text></g><g class="tick" opacity="1" transform="translate(283.1818181818182,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:12</text></g><g class="tick" opacity="1" transform="translate(339.8181818181818,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:13</text></g><g class="tick" opacity="1" transform="translate(396.45454545454544,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:14</text></g><g class="tick" opacity="1" transform="translate(453.0909090909091,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:15</text></g><g class="tick" opacity="1" transform="translate(509.72727272727275,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:16</text></g><g class="tick" opacity="1" transform="translate(566.3636363636364,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:17</text></g><g class="tick" opacity="1" transform="translate(623,0)"><line stroke="#000" y2="6" x1="0.5" x2="0.5"></line><text fill="#000" y="9" x="0.5" dy="0.71em">03:18</text></g></g><g fill="none" font-size="10" font-family="sans-serif" text-anchor="end"><path class="domain" stroke="#000" d="M-6,262.5H0.5V0.5H-6"></path><g class="tick" opacity="1" transform="translate(0,262)"><line stroke="#000" x2="-6" y1="0.5" y2="0.5"></line><text fill="#000" x="-9" y="0.5" dy="0.32em">0.0M</text></g><g class="tick" opacity="1" transform="translate(0,219.1263879718245)"><line stroke="#000" x2="-6" y1="0.5" y2="0.5"></line><text fill="#000" x="-9" y="0.5" dy="0.32em">0.2M</text></g><g class="tick" opacity="1" transform="translate(0,176.25277594364903)"><line stroke="#000" x2="-6" y1="0.5" y2="0.5"></line><text fill="#000" x="-9" y="0.5" dy="0.32em">0.4M</text></g><g class="tick" opacity="1" transform="translate(0,133.37916391547353)"><line stroke="#000" x2="-6" y1="0.5" y2="0.5"></line><text fill="#000" x="-9" y="0.5" dy="0.32em">0.6M</text></g><g class="tick" opacity="1" transform="translate(0,90.50555188729805)"><line stroke="#000" x2="-6" y1="0.5" y2="0.5"></line><text fill="#000" x="-9" y="0.5" dy="0.32em">0.8M</text></g><g class="tick" opacity="1" transform="translate(0,47.631939859122554)"><line stroke="#000" x2="-6" y1="0.5" y2="0.5"></line><text fill="#000" x="-9" y="0.5" dy="0.32em">1.0M</text></g><g class="tick" opacity="1" transform="translate(0,4.758327830947053)"><line stroke="#000" x2="-6" y1="0.5" y2="0.5"></line><text fill="#000" x="-9" y="0.5" dy="0.32em">1.2M</text></g></g></g></svg></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="package-board" style="display: none;">
+            <div id="package-graph">
+                <div id="pkg-graph-action-bar" class="action-bar">
+                    <button type="button" id="pkg-btn-viewport" title="Reset Zoom"><i class="fa fa-sitemap"></i></button><!--
+                    --><button type="button" id="pkg-btn-filter" title="Set Filters"><i class="fa fa-filter"></i></button>
+                </div>
+
+                <div id="pkg-node-action-bar" class="action-bar" style="display: none;">
+                    <button type="button" id="pkg-btn-focus" title="Set/Clear Focus"><i class="fa fa-search"></i></button><!--
+                    --><button type="button" id="pkg-btn-info" title="Details"><i class="fa fa-info"></i></button><!--
+                    --><button type="button" id="pkg-btn-issues" title="Issues"><i class="fa fa-bug"></i></button>
+                </div>
+
+                <div class="issue-scale">
+                    <div class="issue-level-0" title="No issues!"><span class="show-inline-md"><strong>L0</strong></span></div>
+                    <div class="issue-level-1" title="&lt; 1 issue / 120 lines of code"><span class="show-inline-md"><strong>L1</strong></span></div>
+                    <div class="issue-level-2" title="± 1 issue / 100 lines of code"><span class="show-inline-md"><strong>L2</strong></span></div>
+                    <div class="issue-level-3" title="± 1 issue / 70 lines of code"><span class="show-inline-md"><strong>L3</strong></span></div>
+                    <div class="issue-level-4" title="± 1 issue / 45 lines of code"><span class="show-inline-md"><strong>L4</strong></span></div>
+                    <div class="issue-level-5" title="± 1 issue / 24 lines of code"><span class="show-inline-md"><strong>L5</strong></span></div>
+                    <div class="issue-level-6" title="± 1 issue / 15 lines of code"><span class="show-inline-md"><strong>L6</strong></span></div>
+                    <div class="issue-level-7" title="&gt; 1 issue / 12 lines of code"><span class="show-inline-md"><strong>L7</strong></span></div>
+                </div>
+
+                <div id="pkg-filter-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="button-close margin-top"><i class="fa fa-close"></i></div>
+                        <div class="margin-top">
+                            <i class="fa fa-filter"></i>
+                            <label for="pkg-filter-input">Filter by</label>
+                            <span id="pkg-filter-toggle">/ Ignore by</span>
+                        </div>
+                        <input id="pkg-filter-input" type="text" placeholder="tag">
+                        <ul class="taglist"></ul>
+                        <div class="text-button pull-left margin-bottom">Clear</div>
+                        <div class="button-close margin-bottom">Close</div>
+                    </div>
+                </div>
+
+                <div id="pkg-info-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="button-close margin-top"><i class="fa fa-close"></i></div>
+                        <div class="template-wrapper"></div>
+                        <div class="button-close margin-bottom">Close</div>
+                    </div>
+                </div>
+            <svg><defs><marker id="pkg-arrowhead" viewBox="0 -5 10 10" refX="10" refY="0" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" orient="auto"><path d="M0,-5 L10,0 L0,5"></path></marker></defs><g class="graph"><path class="edge hidden" marker-end="url(#pkg-arrowhead)"></path><g class="node"><circle></circle><text text-anchor="middle">teleop_twist_joy</text></g><g class="node"><circle></circle><text text-anchor="middle">lms1xx</text></g><g class="node"><circle></circle><text text-anchor="middle">joy</text></g><g class="node"><circle></circle><text text-anchor="middle">agrobv16_supervisor</text></g><g class="node"><circle></circle><text text-anchor="middle">urg_node</text></g></g></svg></div>
+        </section>
+
+        <section id="issue-board" style="display: block;">
+            <div class="header-menu">
+                <div class="menu-item margin-bottom">
+                    <select id="issue-type-select" class="flexible margin-h">
+                        <option value="source">Source Issues</option>
+                        <option value="runtime" selected="selected">Runtime Issues</option>
+                        <option value="other">Other Issues</option>
+                    </select>
+                </div>
+                <div class="menu-item margin-bottom">
+                    <select id="issue-package-select" class="flexible margin-h" style="display: none;"><option selected="selected">teleop_twist_joy</option>
+<option>lms1xx</option>
+<option>joy</option>
+<option>agrobv16_supervisor</option>
+<option>urg_node</option></select>
+                    <select id="issue-config-select" class="flexible margin-h" style="display: block;"><option>teleop_twist_joy_teleop_node</option>
+<option>agrobv16_supervisor_agrobv16_supervisor_node</option>
+<option selected="selected">startup</option>
+<option>agrobv16_supervisor_twist_mux</option>
+<option>lms1xx_LMS1xx_node</option>
+<option>joy_joy_node</option></select>
+                </div>
+                <div class="menu-item margin-bottom">
+<!--
+                    <label for="issue-report-select">
+                        <i class="fa fa-bug"></i>
+                        <strong class="show-inline-sm">Issue</strong>
+                    </label>
+                    <select id="issue-report-select" class="flexible margin-h margin-bottom">
+                        <option value="standards">Coding Standards</option>
+                        <option value="metrics">Quality Metrics</option>
+                    </select>
+-->
+                    <button type="button" id="issue-btn-filter" class="flex-grow margin-right">
+                        <i class="fa fa-filter"></i> Filter
+                    </button>
+                    <button type="button" id="issue-btn-page-left" class="flex-grow margin-left">
+                        <i class="fa fa-arrow-left"></i>
+                    </button>
+                    <span id="issue-label-page" class="flex-grow text-center">Page 1/1</span>
+                    <button type="button" id="issue-btn-page-right" class="flex-grow margin-left">
+                        <i class="fa fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="issue-explorer">
+        <div class="issue">
+            <h4>Issue #1
+                <span class="show-inline-md">- Rule Architectural Properties</span>
+                <small></small>
+            </h4>
+            <p><strong>Error reported by haros_plugin_mc.</strong></p>
+            <p><br></p><h4>Property: 'globally: 
+/husky_velocity_controller/cmd_vel {linear.x in 1 to 10} requires 
+/joy_teleop/joy {button[0] = 1} || /joy_teleop/joy {button[1] = 1}'</h4><p><strong> Counter-example: </strong></p><ol><li>The
+ /joy_teleop/joy_node sends { button[1] = 0.0, button[0] = 0.0, 
+button[4] = 1.0, button[5] = 0.0 } through the /joy_teleop/joy Topic</li><li>The /agrobv16SUPERVISOR sends { linear.x in 3.8 to 4.2 } through the /agrobv16/max_velocity Topic</li><li>The
+ /agrobv16SUPERVISOR receives { button[1] = 0.0, button[0] = 0.0, 
+button[4] = 1.0, button[5] = 0.0 } through the /joy_teleop/joy Topic</li><li>The /agrobv16SUPERVISOR sends { angular.x in 3.8 to 4.2, linear.x in 3.8 to 4.2 } through the /supervisor/cmd_vel Topic</li><li>The /Agrobv16_twist_mux receives { angular.x in 3.8 to 4.2, linear.x in 3.8 to 4.2 } through the /supervisor/cmd_vel Topic</li><li>The /Agrobv16_twist_mux receives { linear.x in 3.8 to 4.2 } through the /agrobv16/max_velocity Topic</li><li>The
+ /Agrobv16_twist_mux sends { angular.x in 3.8 to 4.2, linear.x in 3.8 to
+ 4.2 } through the /husky_velocity_controller/cmd_vel Topic</li><li>The 
+/husky_node receives { angular.x in 3.8 to 4.2, linear.x in 3.8 to 4.2 }
+ through the /husky_velocity_controller/cmd_vel Topic</li><li>The 
+/joy_teleop/teleop_twist_joy receives { button[1] = 0.0, button[0] = 
+0.0, button[4] = 1.0, button[5] = 0.0 } through the /joy_teleop/joy 
+Topic</li></ol><p></p>
+            <ul class="taglist">
+                <li class="tag" data-tag="Model-Check">Model-Check</li>
+<li class="tag" data-tag="Architecture">Architecture</li>
+<li class="tag" data-tag="Hpl-Properties">Hpl-Properties</li>
+
+            </ul>
+        </div>
+    </div>
+            <div class="text-center margin-bottom">
+                <span id="issue-btn-top" class="text-button">Back to Top</span>
+            </div>
+
+            <div id="issue-filter-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="button-close margin-top"><i class="fa fa-close"></i></div>
+                    <div class="margin-top">
+                        <i class="fa fa-filter"></i>
+                        <label for="issue-filter-input">Filter by</label>
+                        <span id="issue-filter-toggle">/ Ignore by</span>
+                    </div>
+                    <input id="issue-filter-input" type="text" placeholder="tag">
+                    <ul class="taglist"></ul>
+                    <div class="text-button pull-left margin-bottom">Clear</div>
+                    <div class="button-close margin-bottom">Close</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ros-board" style="display: none;">
+            <div class="header-menu">
+                <div class="menu-item margin-bottom">
+                    <select id="ros-config-select" class="flexible margin-h"><option>teleop_twist_joy_teleop_node</option>
+<option>agrobv16_supervisor_agrobv16_supervisor_node</option>
+<option selected="selected">startup</option>
+<option>agrobv16_supervisor_twist_mux</option>
+<option>lms1xx_LMS1xx_node</option>
+<option>joy_joy_node</option></select>
+                </div>
+                <div class="menu-item margin-bottom">
+                    <button type="button" id="ros-config-issues" class="margin-h"><i class="fa fa-bug"></i> Issues</button>
+                </div>
+            </div>
+            <div class="pure-g">
+                <div class="pure-u-1 pure-u-sm-1-2 pure-u-md-1-3 pure-u-lg-1-4">
+                    <div class="header-menu">
+                        <select id="ros-query-select" class="flexible"><option value="null" selected="selected">--No highlights--</option>
+</select>
+                    </div>
+                    <div id="config-details" class="panel">
+        <p><strong>Package Dependencies:</strong> (none)</p>
+        <p><strong>Environment Dependencies:</strong> HUSKY_LMS1XX_ENABLED, HUSKY_PORT, HUSKY_URDF_EXTRAS, HUSKY_LOGITECH, HUSKY_KINECT_ENABLED, HUSKY_JOY_DEVICE</p>
+        <p><strong>Name Collisions:</strong> 13</p>
+        <p><strong>Name Remappings:</strong> 1</p>
+        <p><strong>Launched Nodes:</strong> 16</p>
+    </div>
+                </div>
+                <div class="pure-u-1 pure-u-sm-1-2 pure-u-md-2-3 pure-u-lg-3-4">
+                    <div id="config-graph" class="margin-h" style="height: 186px;">
+                        <div id="config-graph-action-bar" class="action-bar">
+                            <button type="button" id="config-btn-viewport" title="Reset Zoom"><i class="fa fa-sitemap"></i></button><!--
+                            --><button type="button" id="config-btn-drag" title="Enable/Disable Dragging"><i class="fa fa-hand-rock-o"></i></button><!--
+                            --><button type="button" id="config-btn-names" title="Show/Hide Names"><i class="fa fa-font"></i></button><!--
+                            --><button type="button" id="config-btn-param" title="Show/Hide Parameters"><i class="fa fa-server"></i></button>
+                        </div>
+
+                        <div id="config-node-action-bar" class="action-bar" style="display: none;">
+                            <button type="button" id="config-btn-focus" title="Set/Clear Focus"><i class="fa fa-search"></i></button><!--
+                            --><button type="button" id="config-btn-info" title="Details"><i class="fa fa-info"></i></button>
+                        </div>
+
+                        <div id="config-info-modal" class="modal" style="display: none;">
+                            <div class="modal-content">
+                                <div class="button-close margin-top"><i class="fa fa-close"></i></div>
+                                <div class="template-wrapper"></div>
+                                <div class="button-close margin-bottom">Close</div>
+                            </div>
+                        </div>
+                    <svg><defs><marker id="config-arrowhead" viewBox="0 -5 10 10" refX="12" refY="0" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,-5 L10,0 L0,5"></path></marker></defs><g class="graph hide-text" transform="translate(16,18.5) scale(0.31606765327695563)"><path class="edge hidden conditional" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge hidden" marker-end="url(#config-arrowhead)"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M40,80L21.617975065414267,129.0187331588953"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M40,80L58.38202493458573,129.0187331588953"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M40,80L100.04145090106144,133.3701785787213"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M208,16L169.6,67.2"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M160,16L160,64"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M712,80L701.4191500608869,128.36959972165982"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M424,16L363.95854909893853,69.37017857872128"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M770,80L804.935538833807,130.81532921281013"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M900,80L826.8357315403844,134.44782769087672"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M824,80L816.4700300843778,128.19180745998239"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M574,208L574,256"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M256,16L256,64"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M664,80L690.493516384612,129.87014848868142"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M770,80L709.9585490989385,133.3701785787213"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M900,80L923.2090579803084,129.5126570246581"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M930,208L873.6511998830848,261.0341648159201"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M882,208L866.7723998901752,256.72832035143955"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M814,208L852.4,259.2"></path><path class="edge conditional" marker-end="url(#config-arrowhead)" d="M376,16L357.61797506541427,65.01873315889529"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M328,16L346.38202493458573,65.01873315889529"></path><path class="edge conditional" marker-end="url(#config-arrowhead)" d="M40,16L40,64"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M862,336L862,384"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M520,16L520,64"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M160,80L160,128"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M160,80L198.4,131.2"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M814,144L870.3488001169152,197.03416481592015"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M814,144L814,192"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M814,144L589.4597590336199,203.87739759103468"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M256,80L256,128"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M256,80L294.4,131.2"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M616,80L577.6,131.2"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M698,144L634.2385791698728,197.69382806747552"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M698,144L676.4131013443154,193.34148264156497"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M698,144L713.2276001098248,192.72832035143952"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M698,144L754.3488001169152,197.03416481592015"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M930,144L930,192"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M900,16L900,64"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M862,272L862,320"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M472,16L472,64"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M352,80L352,128"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M352,80L412.04145090106147,133.3701785787213"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M862,400L843.6179750654143,449.0187331588953"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M862,400L880.3820249345857,449.0187331588953"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M568,80L568,128"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M770,16L770,64"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M520,80L481.6,131.2"></path><path class="edge" marker-end="url(#config-arrowhead)" d="M520,80L558.4,131.2"></path><g class="node ros-node"><circle cx="520" cy="80" r="16"></circle><text text-anchor="middle" x="520" y="80">/robot_state_publisher</text></g><g class="node ros-node"><circle cx="770" cy="16" r="16"></circle><text text-anchor="middle" x="770" y="16">/lms1xx</text></g><g class="node ros-node"><circle cx="568" cy="80" r="16"></circle><text text-anchor="middle" x="568" y="80">/laser_base_link</text></g><g class="node ros-node"><circle cx="862" cy="400" r="16"></circle><text text-anchor="middle" x="862" y="400">/husky_node</text></g><g class="node ros-node"><circle cx="40" cy="80" r="16"></circle><text text-anchor="middle" x="40" y="80">/base_controller_spawner</text></g><g class="node ros-node"><circle cx="352" cy="80" r="16"></circle><text text-anchor="middle" x="352" y="80">/ekf_localization</text></g><g class="node ros-node"><circle cx="472" cy="16" r="16"></circle><text text-anchor="middle" x="472" y="16">/twist_marker_server</text></g><g class="node ros-node"><circle cx="862" cy="272" r="16"></circle><text text-anchor="middle" x="862" y="272">/Agrobv16_twist_mux</text></g><g class="node ros-node"><circle cx="900" cy="16" r="16"></circle><text text-anchor="middle" x="900" y="16">/joy_teleop/joy_node</text></g><g class="node ros-node"><circle cx="930" cy="144" r="16"></circle><text text-anchor="middle" x="930" y="144">/joy_teleop/teleop_twist_joy</text></g><g class="node ros-node"><circle cx="698" cy="144" r="16"></circle><text text-anchor="middle" x="698" y="144">/hector_mapping</text></g><g class="node ros-node"><circle cx="616" cy="80" r="16"></circle><text text-anchor="middle" x="616" y="80">/zed_link</text></g><g class="node ros-node"><circle cx="256" cy="80" r="16"></circle><text text-anchor="middle" x="256" y="80">/diagnostic_aggregator</text></g><g class="node ros-node"><circle cx="574" cy="272" r="16"></circle><text text-anchor="middle" x="574" y="272">/supervisorGUI1</text></g><g class="node ros-node"><circle cx="814" cy="144" r="16"></circle><text text-anchor="middle" x="814" y="144">/agrobv16SUPERVISOR</text></g><g class="node ros-node"><circle cx="160" cy="80" r="16"></circle><text text-anchor="middle" x="160" y="80">/ProsilicaCamera</text></g><g class="node ros-topic"><circle cx="568" cy="144" r="16"></circle><text text-anchor="middle" x="568" y="144">/tf_static</text></g><g class="node ros-topic"><circle cx="472" cy="144" r="16"></circle><text text-anchor="middle" x="472" y="144">/tf</text></g><g class="node ros-topic"><circle cx="520" cy="16" r="16"></circle><text text-anchor="middle" x="520" y="16">/joint_states</text></g><g class="node ros-topic"><circle cx="770" cy="80" r="16"></circle><text text-anchor="middle" x="770" y="80">/scan</text></g><g class="node ros-topic"><circle cx="886" cy="464" r="16"></circle><text text-anchor="middle" x="886" y="464">/husky_velocity_controller/odom</text></g><g class="node ros-topic"><circle cx="838" cy="464" r="16"></circle><text text-anchor="middle" x="838" y="464">/status</text></g><g class="node ros-topic"><circle cx="862" cy="336" r="16"></circle><text text-anchor="middle" x="862" y="336">/husky_velocity_controller/cmd_vel</text></g><g class="node ros-topic conditional"><circle cx="40" cy="16" r="16"></circle><text text-anchor="middle" x="40" y="16">/?</text></g><g class="node ros-topic"><circle cx="424" cy="144" r="16"></circle><text text-anchor="middle" x="424" y="144">/odometry/filtered</text></g><g class="node ros-topic"><circle cx="352" cy="144" r="16"></circle><text text-anchor="middle" x="352" y="144">/accel/filtered</text></g><g class="node ros-topic"><circle cx="328" cy="16" r="16"></circle><text text-anchor="middle" x="328" y="16">/set_pose</text></g><g class="node ros-topic conditional"><circle cx="376" cy="16" r="16"></circle><text text-anchor="middle" x="376" y="16">/?</text></g><g class="node ros-topic"><circle cx="472" cy="80" r="16"></circle><text text-anchor="middle" x="472" y="80">/twist_marker_server/cmd_vel</text></g><g class="node ros-topic"><circle cx="814" cy="208" r="16"></circle><text text-anchor="middle" x="814" y="208">/agrobv16/max_velocity</text></g><g class="node ros-topic"><circle cx="882" cy="208" r="16"></circle><text text-anchor="middle" x="882" y="208">/supervisor/cmd_vel</text></g><g class="node ros-topic"><circle cx="930" cy="208" r="16"></circle><text text-anchor="middle" x="930" y="208">/joy_teleop/cmd_vel</text></g><g class="node ros-topic"><circle cx="900" cy="80" r="16"></circle><text text-anchor="middle" x="900" y="80">/joy_teleop/joy</text></g><g class="node ros-topic"><circle cx="766" cy="208" r="16"></circle><text text-anchor="middle" x="766" y="208">/map_metadata</text></g><g class="node ros-topic"><circle cx="718" cy="208" r="16"></circle><text text-anchor="middle" x="718" y="208">/map</text></g><g class="node ros-topic"><circle cx="670" cy="208" r="16"></circle><text text-anchor="middle" x="670" y="208">/slam_out_pose</text></g><g class="node ros-topic"><circle cx="622" cy="208" r="16"></circle><text text-anchor="middle" x="622" y="208">/poseupdate</text></g><g class="node ros-topic"><circle cx="664" cy="80" r="16"></circle><text text-anchor="middle" x="664" y="80">/syscommand</text></g><g class="node ros-topic"><circle cx="304" cy="144" r="16"></circle><text text-anchor="middle" x="304" y="144">/diagnostics_agg</text></g><g class="node ros-topic"><circle cx="256" cy="144" r="16"></circle><text text-anchor="middle" x="256" y="144">/diagnostics_toplevel_state</text></g><g class="node ros-topic"><circle cx="256" cy="16" r="16"></circle><text text-anchor="middle" x="256" y="16">/diagnostics</text></g><g class="node ros-topic"><circle cx="574" cy="208" r="16"></circle><text text-anchor="middle" x="574" y="208">/agrobv16/current_state</text></g><g class="node ros-topic"><circle cx="824" cy="80" r="16"></circle><text text-anchor="middle" x="824" y="80">/lidar1/scan</text></g><g class="node ros-topic"><circle cx="208" cy="144" r="16"></circle><text text-anchor="middle" x="208" y="144">/camera/image_raw</text></g><g class="node ros-topic"><circle cx="160" cy="144" r="16"></circle><text text-anchor="middle" x="160" y="144">/camera/camera_info</text></g><g class="node ros-service"><circle cx="112" cy="144" r="16"></circle><text text-anchor="middle" x="112" y="144">/controller_manager/load_controller</text></g><g class="node ros-service"><circle cx="64" cy="144" r="16"></circle><text text-anchor="middle" x="64" y="144">/controller_manager/switch_controller</text></g><g class="node ros-service"><circle cx="16" cy="144" r="16"></circle><text text-anchor="middle" x="16" y="144">/controller_manager/unload_controller</text></g><g class="node ros-service"><circle cx="424" cy="16" r="16"></circle><text text-anchor="middle" x="424" y="16">/set_pose</text></g><g class="node ros-service"><circle cx="712" cy="80" r="16"></circle><text text-anchor="middle" x="712" y="80">/dynamic_map</text></g><g class="node ros-service"><circle cx="160" cy="16" r="16"></circle><text text-anchor="middle" x="160" y="16">/set_camera_info</text></g><g class="node ros-service"><circle cx="208" cy="16" r="16"></circle><text text-anchor="middle" x="208" y="16">/request_image</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/lms1xx/host</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/angular/z/max_acceleration</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/angular/z/has_velocity_limits</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/angular/z/has_acceleration_limits</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/angular/z/max_velocity</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/type</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/estimate_velocity_from_position</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/cmd_vel_timeout</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/base_frame_id</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/right_wheel</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/wheel_separation_multiplier</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/velocity_rolling_window_size</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/wheel_radius_multiplier</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/enable_odom_tf</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/left_wheel</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/publish_rate</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/linear/x/max_acceleration</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/linear/x/has_velocity_limits</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/linear/x/has_acceleration_limits</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/linear/x/max_velocity</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/twist_covariance_diagonal</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_velocity_controller/pose_covariance_diagonal</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_joint_publisher/publish_rate</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_joint_publisher/type</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/Agrobv16_twist_mux/topics</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/Agrobv16_twist_mux/locks</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/scale_linear</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/axis_angular</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/enable_turbo_button</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/scale_linear_turbo</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/scale_angular</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/axis_linear</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/enable_button</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/joy_node/dev</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/joy_node/autorepeat_rate</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/joy_node/deadzone</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/enable_turbo_button</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/scale_angular</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/enable_button</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/scale_linear</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/axis_angular</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/scale_angular_turbo</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/scale_linear_turbo</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/teleop_twist_joy/axis_linear</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/joy_node/autorepeat_rate</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/joy_node/deadzone</text></g><g class="node ros-param conditional hidden"><circle></circle><text text-anchor="middle">/joy_teleop/joy_node/dev</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/base_frame</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/pub_map_odom_transform</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/map_frame</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/map_size</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/map_resolution</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ProsilicaCamera/ip_address</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ProsilicaCamera/guid</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/robot_description</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/tf_prefix</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/publish_frequency</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/use_tf_static</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ignore_timestamp</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_node/control_frequency</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_node/diagnostic_frequency</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_node/wheel_diameter</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_node/max_accel</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_node/max_speed</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/husky_node/port</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/?</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ekf_localization/frequency</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ekf_localization/sensor_timeout</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ekf_localization/two_d_mode</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ekf_localization/map_frame</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ekf_localization/odom_frame</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ekf_localization/base_link_frame</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/ekf_localization/world_frame</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/twist_marker_server/link_name</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/twist_marker_server/robot_name</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/twist_marker_server/marker_size_scale</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/odom_frame</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/map_start_x</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/map_start_y</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/map_update_distance_thresh</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/map_update_angle_thresh</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/map_pub_period</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/map_multi_res_levels</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/update_factor_free</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/update_factor_occupied</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/laser_min_dist</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/laser_max_dist</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/laser_z_min_value</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/laser_z_max_value</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/output_timing</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/scan_subscriber_queue_size</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/pub_map_scanmatch_transform</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/hector_mapping/tf_map_scanmatch_transform_frame_name</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/diagnostic_aggregator/pub_rate</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/diagnostic_aggregator/base_path</text></g><g class="node ros-param hidden"><circle></circle><text text-anchor="middle">/diagnostic_aggregator/analyzers</text></g></g></svg></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="help-board" style="display: none;">
+            <h2>Metrics</h2>
+            <h4>How are lines of code measured?</h4>
+            <p>HAROS supports several ways to measure lines of code:</p>
+            <dl>
+                <dt>LOC (Physical Lines of Code)</dt>
+                <dd>measures the number of line feeds in a text file.</dd>
+
+                <dt>SLOC (Source Lines of Code)</dt>
+                <dd>measures the number of physical lines, minus blank lines; it is the number of lines of source code and comments.</dd>
+
+                <dt>PLOC (Program Lines of Code)</dt>
+                <dd>measures the number of source code lines (no comments or blank lines).</dd>
+
+                <dt>LLOC (Logical Lines of Code)</dt>
+                <dd>measures the number of logical lines of code; e.g.
+                <span style="font-family: monospace; white-space: pre-wrap">if (condition) func();</span>
+                counts as two lines.</dd>
+
+                <dt>ELOC (Executable Lines of Code)</dt>
+                <dd>measures the number of executable lines of code; e.g. this
+                could exclude lines with braces and so on, depending on
+                the language.</dd>
+            </dl>
+
+            <p><b>Note:</b> HAROS, by itself, only counts LOC. All other types
+            are provided by plugins. Since you may be running HAROS without any
+            of the other LOC types, for calculating package score (colour) HAROS
+            uses an estimate of the <i>useful lines of code</i>, calculated from
+            the raw LOC value. This estimate tries to approximate a PLOC/ELOC
+            value, but may be quite wrong.</p>
+
+            <h4>What is Cyclomatic Complexity, and how to fix it?</h4>
+            <p>Cyclomatic Complexity measures the amount of execution paths that
+            result from decisions within a function. <i>In English:</i> the
+            minimum value is 1, because there is always one path for the
+            function; there is no maximum, by definition; it counts the amount of
+            <b>if</b>, <b>or</b>, <b>and</b>, <b>for</b>, <b>while</b>...
+            Typically, the greater the value, the harder it is to understand
+            the function.</p>
+
+            <p>Normally, when CC is high, the functions also tend to be
+            quite big. Try to split the function in smaller functions that
+            make sense (and ideally, ones that can be reused).</p>
+
+            <p><b>Note:</b> use your best judgement when breaking functions
+            into smaller chunks. Sometimes, a function has many decisions,
+            but may be easier to understand in the whole, rather than a
+            bunch of smaller functions whose sole purpose is to decrease
+            a number.</p>
+
+            <h4>What is the Maintainability Index, and how can I increase it?</h4>
+            <p>The Maintainability Index is a metric that is calculated from
+            a bunch of other metrics (lines of code, comment ratio,
+            Cyclomatic Complexity, Halstead Volume). It was designed to be a
+            <i>score</i> for how maintainable your code is. However, it has
+            received some criticism over time, and many people say that its
+            current definition could improve. Use it as feedback, but not
+            as a rule.</p>
+
+            <p>Naturally, to improve it, you need to improve these metrics.
+            Decrease lines of code, document your code, and reduce its
+            complexity.</p>
+        </section>
+
+
+        <section id="preloader" class="text-center" style="display: none;">
+            <h1>Loading...</h1>
+            <h1><i class="fa fa-spinner fa-spin"></i></h1>
+        </section>
+    </div>
+
+    <script type="text/template" id="dashboard-panel-source-template">
+        <a href="#packages"><h4 class="title"><i class="fa fa-file-code-o"></i> Source Code</h4></a>
+        <p class="item">
+            <span class="label">Packages</span>
+            <span class="badge-empty"><%= data.packages != null ? data.packages : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Files</span>
+            <span class="badge-empty"><%= data.files != null ? data.files : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Scripts</span>
+            <span class="badge-empty"><%= data.scripts != null ? data.scripts : "n/a" %></span>
+        </p>
+    </script>
+
+    <script type="text/template" id="dashboard-panel-issues-template">
+        <a href="#issues"><h4 class="title"><i class="fa fa-bug"></i> Issues</h4></a>
+        <p class="item">
+            <span class="label">Total issues</span>
+            <span class="badge-empty"><%= data.total != null ? data.total : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Coding standards</span>
+            <span class="badge-empty"><%= data.coding != null ? data.coding : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Code metrics</span>
+            <span class="badge-empty"><%= data.metrics != null ? data.metrics : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Other issues</span>
+            <span class="badge-empty"><%= data.other != null ? data.other : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Issues per line</span>
+            <span class="badge-empty"><%= data.ratio != null ? data.ratio : "n/a" %></span>
+        </p>
+    </script>
+
+    <script type="text/template" id="dashboard-panel-components-template">
+        <a href="#components"><h4 class="title"><i class="fa fa-gears"></i> ROS Components</h4></a>
+        <p class="item">
+            <span class="label">Launch files</span>
+            <span class="badge-empty"><%= data.launchFiles != null ? data.launchFiles : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Configurations</span>
+            <span class="badge-empty"><%= data.configurations != null ? data.configurations : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Node count</span>
+            <span class="badge-empty"><%= data.nodes != null ? data.nodes : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Nodelets</span>
+            <span class="badge-empty"><%= data.nodelets != null ? data.nodelets : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Parameter files</span>
+            <span class="badge-empty"><%= data.parameterFiles != null ? data.parameterFiles : "n/a" %></span>
+        </p>
+    </script>
+
+    <script type="text/template" id="dashboard-panel-communications-template">
+        <a href="#components"><h4 class="title"><i class="fa fa-exchange"></i> ROS Communications</h4></a>
+        <p class="item">
+            <span class="label">Topics</span>
+            <span class="badge-empty"><%= data.topics != null ? data.topics : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Remappings</span>
+            <span class="badge-empty"><%= data.remappings != null ? data.remappings : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Custom messages</span>
+            <span class="badge-empty"><%= data.messages != null ? data.messages : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Custom services</span>
+            <span class="badge-empty"><%= data.services != null ? data.services : "n/a" %></span>
+        </p>
+        <p class="item">
+            <span class="label">Custom actions</span>
+            <span class="badge-empty"><%= data.actions != null ? data.actions : "n/a" %></span>
+        </p>
+    </script>
+
+    <script type="text/template" id="package-board-tag-item">
+        <li class="tag" data-tag="<%= data.tag %>"><i class="fa fa-close"></i> <%= data.tag %></li>
+    </script>
+
+    <script type="text/template" id="package-board-info-modal">
+        <h4 class="title">
+            <%= data.id %>
+            <small><a target="_blank" href="<%= data.wiki %>">Wiki <i class="fa fa-external-link"></i></a></small>
+        </h4>
+        <% if (data.metapackage) print('<span class="info">Metapackage</span>'); %>
+        <hr>
+        <p><%= data.description %></p>
+        <hr>
+        <p>
+            <i class="fa fa-group bullet-icon"></i>
+            <strong>Authors:</strong>
+            <%= data.authors.join(", ") || "n/a" %>
+        </p>
+        <p>
+            <i class="fa fa-wrench bullet-icon"></i>
+            <strong>Maintainers:</strong>
+            <%= data.maintainers.join(", ") || "n/a" %>
+        </p>
+        <p>
+            <i class="fa fa-code-fork bullet-icon"></i>
+            <strong>Repository:</strong>
+            <%= !!data.repository
+                ? '<a target="_blank" href="' + data.repository + '">'
+                    + data.repository.split("/")[2]
+                    + ' <i class="fa fa-external-link"></i></a>'
+                : "n/a" %>
+        </p>
+        <p>
+            <i class="fa fa-warning bullet-icon"></i>
+            <strong>Bug Tracker:</strong>
+            <%= !!data.bugTracker
+                ? '<a target="_blank" href="' + data.bugTracker + '">'
+                    + data.bugTracker.split("/")[2]
+                    + ' <i class="fa fa-external-link"></i></a>'
+                : "n/a" %>
+        </p>
+        <p>
+            <i class="fa fa-sitemap bullet-icon"></i>
+            <strong>Dependencies:</strong>
+            <%= data.dependencies.join(", ") || "none" %>
+        </p>
+        <p>
+            <i class="fa fa-database bullet-icon"></i>
+            <strong>Size:</strong>
+            <%= data.size != null ? data.size.toLocaleString() + " KB" : "n/a" %>
+        </p>
+        <p>
+            <i class="fa fa-list-ol bullet-icon"></i>
+            <strong>Physical Lines:</strong>
+            <%= data.lines != null ? data.lines.toLocaleString() : "n/a" %>
+        </p>
+    </script>
+
+    <script type="text/template" id="issue-board-violation">
+        <div class="issue">
+            <h4>Issue #<%= data.id %>
+                <span class="show-inline-md">- Rule <%= data.rule %></span>
+                <small><% if (data.location != null && data.location.file) {
+                    print("in " + data.location.file);
+                    if (data.location.line) print(", line " + data.location.line);
+                } %></small>
+            </h4>
+            <p><strong><%= data.description %></strong></p>
+            <p><%= (data.comment || "").replace("\n", "<br/>") || "<i>No additional comment.</i>" %></p>
+            <ul class="taglist">
+                <% for (var i = 0; i < data.tags.length; ++i)
+                    print('<li class="tag" data-tag="' + data.tags[i] + '">' + data.tags[i] + "</li>\n");
+                %>
+            </ul>
+        </div>
+    </script>
+
+    <script type="text/template" id="ros-board-config-summary">
+        <p><strong>Package Dependencies:</strong> <%= data.dependencies.join(", ") || "(none)" %></p>
+        <p><strong>Environment Dependencies:</strong> <%= data.environment.join(", ") || "(none)" %></p>
+        <p><strong>Name Collisions:</strong> <%= data.collisions %></p>
+        <p><strong>Name Remappings:</strong> <%= data.remaps %></p>
+        <p><strong>Launched Nodes:</strong> <%= data.nodes.length %></p>
+    </script>
+
+    <script type="text/template" id="ros-board-info-modal">
+        <h4 class="title"><%= data.name %> <span class="info"><%= data.resourceType %></span></h4>
+        <span class="info"><%= data.type %></span>
+        <hr>
+        <p>
+            <i class="fa fa-terminal bullet-icon"></i>
+            <strong>Arguments:</strong>
+            <%= data.args || "(none)" %>
+        </p>
+        <p>
+            <i class="fa fa-file-text bullet-icon"></i>
+            <strong>Source Code Locations:</strong>
+            <% if (!data.traceability.length) print("(unknown)");
+            for (var j = 0; j < data.traceability.length; ++j)
+                print("<br/><small>in package <i>"
+                      + data.traceability[j].package
+                      + "</i>"
+                      + (data.traceability[j].file
+                         ? ", file <i>" + data.traceability[j].file + "</i>"
+                         : "")
+                      + (data.traceability[j].file && data.traceability[j].line
+                         ? ", line " + data.traceability[j].line
+                         : "")
+                      + "</small>\n");
+            %>
+        </p>
+        <p>
+            <i class="fa fa-asterisk bullet-icon"></i>
+            <strong>Conditions:</strong>
+            <% if (!data.conditions.length) print("(none)");
+            for (var i = 0; i < data.conditions.length; ++i)
+                print('<br/><span class="code">' + data.conditions[i].condition
+                      + "</span> in <i>"
+                      + (data.conditions[i].location
+                        ? (data.conditions[i].location.package
+                            + (data.conditions[i].location.file
+                                ? "/" + data.conditions[i].location.file : "")
+                            + "</i>"
+                            + (data.conditions[i].location.line
+                                ? ", line " + data.conditions[i].location.line : ""))
+                        : "unknown location</i>")
+                      + "\n");
+            %>
+        </p>
+    </script>
+
+
+</body></html>
