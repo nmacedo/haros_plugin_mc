@@ -406,7 +406,7 @@ check prop_2{
 
 check prop_3{
 	always { ((some m1: Node.outbox & topic._husky_velocity_controller_cmd_vel | (linear_x.(m1.value) in geometry_msgs_Twist_0 and angular_x.(m1.value) in geometry_msgs_Twist_minus100_100))) 
-			implies before once (((some m0: Node.inbox & topic._scan| (ranges_0_.(m0.value) in sensor_msgs_LaserScan_0_4)))) }
+			implies before once (((some m0: Node.inbox & topic._scan| (ranges_0_.(m0.value) in sensor_msgs_LaserScan_0_4)) or (some m0: Node.inbox & topic._joy_teleop_joy| (button_0_.(m0.value) in sensor_msgs_Joy_1)))) }
 } for 4 but exactly 4 Value, 9 Message, exactly 10 Time
 
 check prop_4{
