@@ -392,24 +392,24 @@ fact _agrobv16SUPERVISOR_Behaviour {
 check prop_0{
 	always { ((some m1: Node.outbox & topic._agrobv16_current_state | (data_0_.(m1.value) in std_msgs_Int16MultiArray_3))) 
 			implies before once (((some m0: Node.inbox & topic._joy_teleop_joy| (button_0_.(m0.value) in sensor_msgs_Joy_0 and button_1_.(m0.value) in sensor_msgs_Joy_1)))) }
-} for 4 but exactly 4 Value, 9 Message, exactly 10 Time
+} for 4 but exactly 3 Value, 4 Message, exactly 10 Time
 
 check prop_1{
 	always { ((some m1: Node.outbox & topic._agrobv16_current_state | (data_0_.(m1.value) in std_msgs_Int16MultiArray_6))) 
 			implies before once (((some m0: Node.inbox & topic._joy_teleop_joy| (button_0_.(m0.value) in sensor_msgs_Joy_1)))) }
-} for 4 but exactly 4 Value, 9 Message, exactly 10 Time
+} for 4 but exactly 3 Value, 4 Message, exactly 10 Time
 
 check prop_2{
 	always { ((some m1: Node.outbox & topic._agrobv16_current_state | (data_0_.(m1.value) in std_msgs_Int16MultiArray_0))) 
 			implies before once (((some m0: Node.inbox & topic._joy_teleop_joy| (button_1_.(m0.value) in sensor_msgs_Joy_0 and button_0_.(m0.value) in sensor_msgs_Joy_0)))) }
-} for 4 but exactly 4 Value, 9 Message, exactly 10 Time
+} for 4 but exactly 3 Value, 4 Message, exactly 10 Time
 
 check prop_3{
 	always { ((some m1: Node.outbox & topic._husky_velocity_controller_cmd_vel | (linear_x.(m1.value) in geometry_msgs_Twist_0 and angular_x.(m1.value) in geometry_msgs_Twist_minus100_100))) 
 			implies before once (((some m0: Node.inbox & topic._scan| (ranges_0_.(m0.value) in sensor_msgs_LaserScan_0_4)) or (some m0: Node.inbox & topic._joy_teleop_joy| (button_0_.(m0.value) in sensor_msgs_Joy_1)))) }
-} for 4 but exactly 4 Value, 9 Message, exactly 10 Time
+} for 4 but exactly 3 Value, 4 Message, exactly 10 Time
 
 check prop_4{
 	always { ((some m1: Node.outbox & topic._husky_velocity_controller_cmd_vel | (linear_x.(m1.value) in geometry_msgs_Twist_1_10))) 
 			implies before once (((some m0: Node.inbox & topic._joy_teleop_joy| (button_0_.(m0.value) in sensor_msgs_Joy_1)) or (some m0: Node.inbox & topic._joy_teleop_joy| (button_1_.(m0.value) in sensor_msgs_Joy_1)))) }
-} for 4 but exactly 4 Value, 9 Message, exactly 10 Time
+} for 4 but exactly 4 Value, 5 Message, exactly 10 Time
