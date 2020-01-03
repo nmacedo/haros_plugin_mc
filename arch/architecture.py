@@ -259,6 +259,8 @@ class Architecture:
 		return events
 
 
+
+
 	# [Hpl_Event] -> [Event]
 	def __generate_events(self,hpl_events,negation=False,conditions_type=1):
 		events = []
@@ -293,7 +295,10 @@ class Architecture:
 			event = Event(action,topic,conditions,is_set,alias=hpl_event.alias)
 			events.append(event)
 		return events
-		
+	
+
+
+
 	# HplTopLevelEvent -> Observable AST
 	def __create_Cause(self,event0,event1):
 		triggers = self.__extract_events(event0)
@@ -346,6 +351,7 @@ class Architecture:
 	def __conversion(self,p,t=None,sig=None):
 		scope_type = p.scope.scope_type
 		if scope_type == self.GLOBAL:
+			
 			if t==self.CHECK or t==self.AXIOM:		
 				o = p.observable 
 				pattern = o.pattern	
@@ -363,6 +369,7 @@ class Architecture:
 					event0 = o.behaviour
 					event1 = o.trigger
 					observable = self.__create_Require(event0,event1)	
+				
 				pr = Property(self.pc,t,observable,sig=sig)
 				p_name = "prop_" + str(self.pc)
 				self.__prop_el_map.update({p_name:p})		

@@ -8,6 +8,8 @@ def install():
 	os.system(cmd)
 	cmd = "cp plugin.yaml /plugin_mc/"
 	os.system(cmd)
+	cmd =  ""
+	cmd = "cp ./electrum/meta.ele /plugin_mc/"
 
 
 if __name__=="__main__":

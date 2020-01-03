@@ -90,7 +90,7 @@ class Observable:
 		
 			behaviours_specs = []
 			for e in self.behaviour:
-				spec = ("(some m1: " + str(node) + ".outbox & " + "topic."+e.topic.replace('/','_') +
+				spec = ("(some m1: " + str(node) + ".outbox & " + "topic."+e".topic.replace('/','_') +
 				" | (" + e.spec() + "))")
 				behaviours_specs.append(spec)
 
@@ -126,7 +126,7 @@ class Observable:
 class Property:
 	
 	CHECK = 1
-	AXIOM = 2
+	AXIOM = 2 
 
 	def __init__(self,pc,t,observable,node=None,sig=None):
 		self.pc = pc
@@ -134,7 +134,7 @@ class Property:
 		self.type = t
 		self.node = sig
 
-	def spec(self):
+	def spec(self):		# Ramificar este metodo para simplificar arquitetura
 		if self.type == self.CHECK:
 			s = "check prop_" + str(self.pc) + "{\n\t"
 			s += "always { " + self.observable.spec() + " }\n"
