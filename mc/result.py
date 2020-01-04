@@ -6,9 +6,7 @@ from resultListener import *
 from ast import *
 import re
 
-
 result_Collection = ResultCollection()
-
 	
 class Interpreter(resultListener):
 	def field_to_tuple(self,field,regex):

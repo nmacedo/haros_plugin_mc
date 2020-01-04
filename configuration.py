@@ -387,6 +387,7 @@ class Configuration(object):
         self.nodes = dict()
         self.field = dict()
         self.properties = dict()
+        self.hpl_map = dict()
         self.numeric_tree = NumericTree()  
         self.string_tree = StringTree()
         self.value_scope = scopes['Value']
@@ -531,6 +532,7 @@ class Configuration(object):
             prop = self.create_prop(p)
             name = "prop_" + str(c)
             self.properties.update({name: prop})
+            self.hpl_map.update({name: p})
             c +=1
 
     def delete_node(self,k):
