@@ -39,7 +39,7 @@ class Scope():
 class Instance():
 	def __init__(self,states):
 		self.states = states	#[State]	
-		# self.values and self.topics should be placed here.
+		# self.values and self.topics should be placed here.s
 class Field():
 	def __init__(self,field_name,values):
 		self.field_name = field_name

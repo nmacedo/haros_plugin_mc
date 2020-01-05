@@ -20,13 +20,40 @@ class Linker(object):
 	
 	# Node_Signature -> String
 	def real_name(self,n):
-		return "NodeName"
+		nodes = self.configuration.nodes
+		for k in nodes.keys():
+			node_obj = nodes.get(k)
+			if (node_obj.signature).strip() == n.strip():
+				return (node_obj.rosname) 
+		return "NODE NAME NOT FOUND"
+
 	# Message x dict(Message_id: [Field]) -> String
 	def real_value(self,m,values):
+		values = values.get(m)	#[Field]
+		fd = self.configuration.field
+		for f in values:
+			# Getting the field.
+			fo = None
+			fn = (f.field_name).strip()
+			for v in fd.values():
+				if (v.abstract() == fn):
+					fo = v
+					break		
+			field_real_name = fo.token	# Field Name
+			# DOING
+			vt, real_value = self.configuration.values_concretization(f.values)
+	
 		return "ValueConditions"
+
 	# Message x dict(Message_id: Abstract_topic_name) -> String
 	def real_topic(self,m,topics):
-		return "TopicName"
+		t = topics.get(m)
+		topics = self.configuration.topics
+		for k in topics.keys():
+			topic_obj = topics.get(k)
+			if (topic_obj.signature).strip() == t.strip():
+				return (topic_obj.rosname)
+		return "TOPIC NAME NOT FOUND"
 	# Node_Signature x State x State -> [Message_id]
 	def receive(self,n,p,a):
 		rm = [] 
@@ -46,8 +73,8 @@ class Linker(object):
 		am = (a.outbox).get(n)
 		am = [] if am is None else am
 		pm = [] if pm is None else pm
-		for m in pm:
-			if m not in am:
+		for m in am:
+			if m not in pm:
 				sm.append(m)
 		return sm
 
@@ -58,11 +85,11 @@ class Linker(object):
 		for m in sl:
 			topic = self.real_topic(m,topics) 
 			value = self.real_value(m,values)
-			html += "<li>" + "The " + node + " sends { " + value + " } through the " + topic + "topic. " + "</li>"
+			html += "<li>" + "The " + node + " sends { " + value + " } through the " + topic + " topic. " + "</li>"
 		for m in rl:
 			topic = self.real_topic(m,topics)
 			value = self.real_value(m,values)
-			html += "<li>" + "The " + node + " receives { " + value + " } through the " + topic + "topic." + "</li>"
+			html += "<li>" + "The " + node + " receives { " + value + " } through the " + topic + " topic." + "</li>"
 		return html
 
 	# State x State -> HTML

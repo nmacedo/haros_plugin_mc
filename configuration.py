@@ -264,18 +264,28 @@ class NumericTree(object):
         str_v = str_v.replace('.','p')
         str_v = str_v.replace('-','m')
         return str_v
+    # Float -> Void
+    def values_repartition(f):
+        print("will do value repartition")
+
     #HplLiteral -> [String]
-    def include_literal(self,v):
+    def include_literal(self,v,operator=None):
         v = float(v.value)
+        #if operator is not None and operator in ["!=", "not in"]:
+            #self.values_repartition(v)
         str_v = self.toString(v)
         signature = "num_" + str_v
         interval = I.singleton(v)
         self.values.update({signature:interval})
         return [signature]
+    
     #HplSet -> [String]
-    def include_set(self,vls):
+    def include_set(self,vls,operator=None):
         rt = []
         values = vls.values
+        #if operator is not None and operator in ["!=", "not in"]:
+        #    for v in values:
+        #        self.values_repartition(v)
         for v in values:
             v = float(v.value)
             str_v = self.toString(v)
@@ -285,7 +295,9 @@ class NumericTree(object):
             rt.append(signature)
         return rt
     #HplRange -> [String]
-    def include_range(self,v):
+    def include_range(self,v,operator=None):
+        #if operator is not None and operator in ["!=","not in"]:
+        #    self.value_repartition(v)
         lower_bound = v.lower_bound.value
         upper_bound = v.upper_bound.value
         lbstr = self.toString(lower_bound)
@@ -396,7 +408,19 @@ class Configuration(object):
         self.create_structure(nodes, topics)
         self.create_properties(properties)
         self.prune_model()
-   
+    # [String] -> Value Type x Interval
+    def values_concretization(self,values):
+        #DOING
+        vt = values[0]
+        values = values.remove(vt)
+        vt = vt.strip()
+        if vt == "numeric":
+            # isNumeric
+            print("isNumeric")
+        else:
+            # isString
+            print("isString")
+        return None, None
     # String -> Bool
     def validate_operator(self,op):
         if op in ["!=","=","in","not in"]:
@@ -415,25 +439,25 @@ class Configuration(object):
         return field_obj
 
     #HplValue -> TYPE, [Value]
-    def gen_value(self,hplvalue):
+    def gen_value(self,hplvalue,op): # Including the Operator to solve the issue of the values.
         if hplvalue.is_reference:
             return -1, []
         if hplvalue.is_literal:
             if isinstance(hplvalue.value,(int,long,float)):
-                sigl = self.numeric_tree.include_literal(hplvalue)
+                sigl = self.numeric_tree.include_literal(hplvalue,operator=op)
                 return 1, sigl
             else:
                 sigl = self.string_tree.include_literal(hplvalue)
                 return 2, sigl
         if hplvalue.is_range:   
-            sigl = self.numeric_tree.include_range(hplvalue)
+            sigl = self.numeric_tree.include_range(hplvalue,operator=op)
             return 3, sigl
         if hplvalue.is_set:
             sigl = []
             values = hplvalue.values
             nums = (filter(lambda x: isinstance(x.value,(int,long,float)), values) == values)
             if nums is True:
-                sigl = self.numeric_tree.include_set(hplvalue)
+                sigl = self.numeric_tree.include_set(hplvalue,operator=op)
                 return 4,sigl
             else:
                 sigl = self.string_tree.include_set(hplvalue)
@@ -443,9 +467,9 @@ class Configuration(object):
     def gen_conditions(self,hplconditions,t):
         conditions = []
         for c in hplconditions:
-            tp, vlist = self.gen_value(c.value) 
-            ftoken = self.gen_field(c.field.token,t,tp)
             op = self.validate_operator(c.operator)
+            tp, vlist = self.gen_value(c.value,op) 
+            ftoken = self.gen_field(c.field.token,t,tp)
             if tp == -1:
                 condition = Condition(ftoken, op, -1)
                 conditions.append(condition)
