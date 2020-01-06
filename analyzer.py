@@ -148,7 +148,6 @@ class Analyzer(object):
 		self.specification = (module_name + 
 							  meta_model + 
 							  self.configuration.specification())
-		print(self.specification)
 	def run_dir(self):
 		d = os.getcwd()
 		return d 
