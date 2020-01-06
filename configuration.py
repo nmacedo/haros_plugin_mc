@@ -264,8 +264,31 @@ class NumericTree(object):
         str_v = str_v.replace('.','p')
         str_v = str_v.replace('-','m')
         return str_v
+    
+    def has_key(self,values):
+        if (values[0].strip()) == "numeric":
+            values.pop(0)
+            return True
+        else:
+            return (values[0].strip()) in self.values.keys()
+    
+    # [String] -> Operator x Interval
+    def conjunction(self,values):
+        interval = I.closed(-I.inf,I.inf)
+        for v in values:
+            v = v.strip()
+            new_i = self.values.get(v)
+            interval = interval & new_i
+        if len(interval) == 1:  # one interval
+            if interval.lower == interval.upper:
+                return "=", interval.lower
+            else:
+                return "in", interval
+        else:
+            "UNKNOWN", "UNKNOWN"
     # Float -> Void
-    def values_repartition(f):
+    def values_repartition(self,f):
+        # DOING
         print("will do value repartition")
 
     #HplLiteral -> [String]
@@ -359,6 +382,8 @@ class StringTree(object):
     def toString(self,s):
         s = s.replace('\"','')
         return s
+    def conjunction(self,values):
+        return "NOT IMPLEMENTED"
     #HplLiteral -> [String]
     def include_literal(self,v):
         v = v.value
@@ -410,16 +435,10 @@ class Configuration(object):
         self.prune_model()
     # [String] -> Value Type x Interval
     def values_concretization(self,values):
-        #DOING
-        vt = values[0]
-        values = values.remove(vt)
-        vt = vt.strip()
-        if vt == "numeric":
-            # isNumeric
-            print("isNumeric")
+        if self.numeric_tree.has_key(values) is True:
+            return self.numeric_tree.conjunction(values)
         else:
-            # isString
-            print("isString")
+            return self.string_tree.conjunction(values)
         return None, None
     # String -> Bool
     def validate_operator(self,op):

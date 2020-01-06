@@ -1,6 +1,7 @@
 import os
 from configuration import *
 import yaml
+import intervals as I
 from .mc.result import *
 from .mc.ast import *
 
@@ -31,6 +32,7 @@ class Linker(object):
 	def real_value(self,m,values):
 		values = values.get(m)	#[Field]
 		fd = self.configuration.field
+		conditions = []
 		for f in values:
 			# Getting the field.
 			fo = None
@@ -40,10 +42,13 @@ class Linker(object):
 					fo = v
 					break		
 			field_real_name = fo.token	# Field Name
-			# DOING
-			vt, real_value = self.configuration.values_concretization(f.values)
-	
-		return "ValueConditions"
+			op, real_value = self.configuration.values_concretization(f.values)
+			if not isinstance(real_value, float):
+				real_value = str(real_value.lower) + " to " + str(real_value.upper)
+			condition = str(field_real_name) + " " + str(op) + " " + str(real_value)
+			conditions.append(condition)
+		result = ', '.join(conditions)
+		return result
 
 	# Message x dict(Message_id: Abstract_topic_name) -> String
 	def real_topic(self,m,topics):
