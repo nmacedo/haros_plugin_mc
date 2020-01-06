@@ -2,8 +2,8 @@ import os
 from configuration import *
 import yaml
 import intervals as I
-from .mc.result import *
-from .mc.ast import *
+from .translator.result import *
+from .translator.ast import *
 
 ##########################################
 ####### Result-Configuration Linker ######
@@ -18,7 +18,6 @@ class Linker(object):
 		prop_spec = hpl_prop.__str__()
 		header = "<h4> Property '" + prop_spec + "' broken. </h4>"
 		return header
-	
 	# Node_Signature -> String
 	def real_name(self,n):
 		nodes = self.configuration.nodes
@@ -27,7 +26,6 @@ class Linker(object):
 			if (node_obj.signature).strip() == n.strip():
 				return (node_obj.rosname) 
 		return "NODE NAME NOT FOUND"
-
 	# Message x dict(Message_id: [Field]) -> String
 	def real_value(self,m,values):
 		values = values.get(m)	#[Field]
@@ -49,7 +47,6 @@ class Linker(object):
 			conditions.append(condition)
 		result = ', '.join(conditions)
 		return result
-
 	# Message x dict(Message_id: Abstract_topic_name) -> String
 	def real_topic(self,m,topics):
 		t = topics.get(m)
@@ -70,7 +67,6 @@ class Linker(object):
 			if m not in pm:
 				rm.append(m)
 		return rm
-
 	# Node_Signature x State x State -> [Message_id]
 	def sends(self,n,p,a):
 		sm = []
@@ -82,7 +78,6 @@ class Linker(object):
 			if m not in pm:
 				sm.append(m)
 		return sm
-
 	# Node_Signature x [Message_id] x [Message_id] ... -> HTML
 	def to_items(self,n,rl,sl,topics,values):
 		html = ""
@@ -96,7 +91,6 @@ class Linker(object):
 			value = self.real_value(m,values)
 			html += "<li>" + "The " + node + " receives { " + value + " } through the " + topic + " topic." + "</li>"
 		return html
-
 	# State x State -> HTML
 	def events_html(self,p,a):
 		topics = p.topics
@@ -125,7 +119,6 @@ class Linker(object):
 		html += self.events_html(p,a)
 		html += "</ol>"
 		return html
-
 	# SatResult -> HTML
 	def generate_issue(self,r):
 		html = "<br>"
@@ -155,6 +148,7 @@ class Analyzer(object):
 		self.specification = (module_name + 
 							  meta_model + 
 							  self.configuration.specification())
+		print(self.specification)
 	def run_dir(self):
 		d = os.getcwd()
 		return d 

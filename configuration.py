@@ -329,7 +329,6 @@ class NumericTree(object):
         interval = I.closed(lower_bound,upper_bound)
         self.values.update({signature:interval})
         return [signature]
-
     # String -> [String]
     def independence_list(self,signature):
         il = []
@@ -338,7 +337,6 @@ class NumericTree(object):
             if ((self.values[key] & v) == I.empty()):
                 il.append(key)
         return il
-
     # String -> [String]
     def inclusion_list(self,signature):
         il = []
@@ -347,7 +345,6 @@ class NumericTree(object):
             if v in self.values[key] and signature != key:
                 il.append(key)
         return il
-
     def declaration(self):
         s = ""
         independence_fact = ""
