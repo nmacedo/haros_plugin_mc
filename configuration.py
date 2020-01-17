@@ -17,6 +17,16 @@ class Field(object):
         return signature
     def declaration(self):
         s = "one sig " + self.abstract() + " extends Field{}\n\n"
+        t = ""
+        if self.topic_type != -1:
+            if self.type in [1,3,4]:
+                t = "numeric"
+                print("is numeric")
+            else:
+                t = "string"
+                print("is string")
+            s += "fact " + self.abstract() + "_type" + "{\n"
+            s += "\t" + self.abstract() +".(Message.value) in " + t + "\n}\n\n"
         return s
         
 class Condition(object):
@@ -208,7 +218,8 @@ class Topic(object):
             for f in self.vf:
                 fl.append(f.abstract())
             fs = "(" + " + ".join(fl) + ")"
-            s = "\t((topic."+self.signature+").value).Value = (" + fs + ")\n"
+            #"in" operator can be used instead
+            s = "\t((topic."+self.signature+").value).Value = (" + fs + ")\n" 
         return s
 
     def abstract(self,rosname):
