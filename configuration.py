@@ -21,10 +21,8 @@ class Field(object):
         if self.topic_type != -1:
             if self.type in [1,3,4]:
                 t = "numeric"
-                print("is numeric")
             else:
                 t = "string"
-                print("is string")
             s += "fact " + self.abstract() + "_type" + "{\n"
             s += "\t" + self.abstract() +".(Message.value) in " + t + "\n}\n\n"
         return s
@@ -219,7 +217,7 @@ class Topic(object):
                 fl.append(f.abstract())
             fs = "(" + " + ".join(fl) + ")"
             #"in" operator can be used instead
-            s = "\t((topic."+self.signature+").value).Value = (" + fs + ")\n" 
+            s = "\t((topic."+self.signature+").value).Value in (" + fs + ")\n" 
         return s
 
     def abstract(self,rosname):
