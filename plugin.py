@@ -1,5 +1,5 @@
 import os
-from analyzer import *
+from .mc.analyzer import *
 
 def configuration_analysis(iface, scope):
 	# Node Configurations
