@@ -145,10 +145,7 @@ class Analyzer(object):
 		module_name = "module " + str(c_name) + "\n\n"
 		meta_model, scopes = self.load_configuration()
 		self.configuration = Configuration(c_name, nodes, topics,scopes, properties=properties)
-		self.specification = (module_name + 
-							  meta_model + 
-							  self.configuration.specification())
-		#print(self.specification)
+		self.specification = (module_name + meta_model + self.configuration.specification())
 	def run_dir(self):
 		d = os.getcwd()
 		return d 
@@ -156,18 +153,22 @@ class Analyzer(object):
 	def load_configuration(self):
 		scopes = None
 		meta_model = None
-		with open("/plugin_mc/plugin.yaml") as f:
+		with open("/.plugin_mc/plugin.yaml") as f:
 			data = f.read()
 			l = yaml.load(data)
 			scopes = l['scope']
-		with open("/plugin_mc/meta.ele") as f:
+		with open("/.plugin_mc/meta.ele") as f:
 			meta_model = f.read()
 		return meta_model, scopes
 
 	def model_check(self):
-		with open('/plugin_mc/model.ele', 'w' ) as f:
-			f.write(self.specification)
-		cmd = "java -cp /plugin_mc/electrum_pi.jar edu.mit.csail.sdg.alloy4whole.PluginInterface /plugin_mc/model.ele"
+		try:
+			with open('/.plugin_mc/model.ele', 'w' ) as f:
+				f.write(self.specification)
+		except Exception as error:
+			print(error)
+			return None			
+		cmd = "java -cp /.plugin_mc/electrum_pi.jar edu.mit.csail.sdg.alloy4whole.PluginInterface /.plugin_mc/model.ele"
 		os.system(cmd)	# Executing Electrum Call
 		d = self.run_dir() + "/results.txt"
 		parser = Parser(d)
