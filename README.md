@@ -23,7 +23,7 @@ pip install -r requirements.txt
 Finally, just enter the root folder and execute:
 
 ```bash
-cd haros_plugin_mc
+cd ~/haros_plugin_mc
 sudo python setup.py
 ```
 
