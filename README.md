@@ -1,1 +1,1 @@
-# HAROS MC PLUGIN
+# HAROS Model-Checking Plugin
