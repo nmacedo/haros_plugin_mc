@@ -79,23 +79,31 @@ class Linker(object):
 				sm.append(m)
 		return sm
 	# Node_Signature x [Message_id] x [Message_id] ... -> HTML
+	# nmm TODO: since we need the involved nodes for the reporting, this should
+	# return the abstract trace and only be converted to html further downstream
 	def to_items(self,n,rl,sl,topics,values):
 		html = ""
 		node = self.real_name(n)
+		res = set()
 		for m in sl:
 			topic = self.real_topic(m,topics) 
 			value = self.real_value(m,values)
+			res.add(self.configuration.topics.get(topic))
+			res.add(self.configuration.nodes.get(node))
 			html += "<li>" + "The " + node + " sends { " + value + " } through the " + topic + " topic. " + "</li>"
 		for m in rl:
 			topic = self.real_topic(m,topics)
 			value = self.real_value(m,values)
+			res.add(self.configuration.nodes.get(node))
+			res.add(self.configuration.topics.get(topic))
 			html += "<li>" + "The " + node + " receives { " + value + " } through the " + topic + " topic." + "</li>"
-		return html
+		return html, res
 	# State x State -> HTML
 	def events_html(self,p,a):
 		topics = p.topics
 		values = p.values
 		html = ""
+		res = set()
 		nodes_dict = self.configuration.nodes
 		nodes = nodes_dict.keys()
 		nodes_sigs = map(lambda x: ((self.configuration.nodes).get(x)).signature, nodes)
@@ -103,36 +111,45 @@ class Linker(object):
 			n = n.strip() #=
 			rm = self.receive(n,p,a)
 			sm = self.sends(n,p,a)
-			html += self.to_items(n,rm,sm,topics,values)
-		return html
+			h, r = self.to_items(n,rm,sm,topics,values)
+			html += h
+			res = res.union(r)
+		return html, res
 	# Instance -> HTML
 	def trace_html(self,instance): 
 		html = "<ol>"
 		states = instance.states
+		res = set()
 		for i in range(1,len(states)):
 			p = states[i-1]
 			a = states[i]
-			html += self.events_html(p,a)
+			h, r = self.events_html(p,a)
+			html += h
+			res = res.union(r)
 		# Closing Loop
 		p = states[len(states)-1]
 		a = states[0]
-		html += self.events_html(p,a)
+		h, r = self.events_html(p,a)
+		html += h
+		res = res.union(r)
 		html += "</ol>"
-		return html
+		return html, res
 	# SatResult -> HTML
 	def generate_issue(self,r):
 		html = "<br>"
 		html += self.issue_header(r.property_name)
 		html += "<p> <strong> Counter-example trace: </strong> </p>"
-		html += self.trace_html(r.result)
-		return html
+		h, r = self.trace_html(r.result)
+		html += h
+		return html, r
 	# Void -> [HTML]
 	def html(self):
 		rl = []
 		sdict = self.result.getSAT()
 		sl = sdict.values()
 		for v in sl:
-			rl.append(self.generate_issue(v))
+			h, r = self.generate_issue(v)
+			rl.append((h,r))
 		return rl
 
 
