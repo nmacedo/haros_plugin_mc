@@ -180,11 +180,18 @@ class Requirement(Observable):
 
 
 class Property(object): 
-    def __init__(self,p,o):
+    def __init__(self,p,o,a=None,t=None):
         self.pattern = p
         self.observable = o
+        self.activator = a
+        self.terminator = t
 
     def specification(self,signature=None):
+        if self.activator != None :
+            ae = Existence(self.activator).specification(signature)
+            if self.terminator != None :
+                te = Existence(self.terminator).specification(signature)
+                ta = Absence(self.terminator).specification(signature)
         spec = ""
         if signature is not None:
             spec = self.observable.specification(node=signature)
@@ -546,13 +553,17 @@ class Configuration(object):
     #HplProperty -> Property
     def create_prop(self,hpl_prop): 
         scope_type = hpl_prop.scope.scope_type
-        if scope_type == 1:    
+        if scope_type == 1 or scope_type == 2:
             pattern = hpl_prop.observable.pattern
             o = self.create_obs(pattern,hpl_prop.observable)
-            p = Property(pattern,o)
+            a = hpl_prop.scope.activator
+            t = hpl_prop.scope.terminator
+            if a != None : a = self.create_events(a)
+            if t != None : t = self.create_events(t)
+            p = Property(pattern,o,a,t)
             return p
         else:
-            raise Exception("Property Scope Unsupported.")
+            raise Exception("Property Scope Unsupported: "+ str(scope_type))
         return hpl_prop
 
     def create_structure(self, nodes, topics):
