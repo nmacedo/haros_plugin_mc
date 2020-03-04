@@ -192,11 +192,20 @@ class Property(object):
             if self.terminator != None :
                 te = Existence(self.terminator).specification(signature)
                 ta = Absence(self.terminator).specification(signature)
+        print(self.pattern)
         spec = ""
         if signature is not None:
             spec = self.observable.specification(node=signature)
         else:
             spec = self.observable.specification()
+        if self.pattern == 1 :
+            spec = "eventually (" + spec + ")"
+        elif self.pattern == 2:
+            spec = "always (" + spec + ")"
+        elif self.pattern == 3:
+            spec = "always (" + spec + ")"
+        elif self.pattern == 4:
+            spec = "always (" + spec + ")"
         return spec
         
 ####################################################
@@ -262,10 +271,10 @@ class Node(object):
                        "\n\tadvertises = " + advertises + "\n}\n\n")
         if self.properties != []:
             declaration += "fact " + self.signature + "_behaviour{\n"
-            declaration += "\talways{\n\t" 
+            declaration += "\t" 
             for p in self.properties:
                 declaration += "\t" + p.specification(signature=self.signature) + "\n\t"
-            declaration += "\n\t}\n}\n\n"
+            declaration += "\n}\n\n"
         return declaration
 
 ####################################################
@@ -637,8 +646,8 @@ class Configuration(object):
         for k in self.properties:
             p = self.properties.get(k)
             ps = p.specification()
-            s += ("check " + str(k) + "{\n\talways {\n\t\t" + ps 
-                + "\n\t}\n} for 4 but exactly " + 
+            s += ("check " + str(k) + "{\n\t" + ps 
+                + "\n} for 4 but exactly " + 
                 str(self.value_scope) + " Value, " + str(self.message_scope) + " Message, exactly " +
                 str(self.time_scope) + " Time\n\n")
         return s
