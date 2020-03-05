@@ -141,7 +141,7 @@ class Cause(Observable):
             bl.append(spec)
         behaviour_spec = "(" + " or ".join(bl) + ")"
         
-        rts = trigger_spec + "\n\t\t\timplies eventually (" + behaviour_spec + ")"
+        rts = trigger_spec, behaviour_spec
         return rts
 
 
@@ -158,14 +158,14 @@ class Requirement(Observable):
         # Behaviour Specification
         if (len(self.behaviour) == 1) and (self.behaviour[0].alias is not None):
             alias = True
-            bs = ("all m1: " + str(node) + ".outbox & topic." + self.behaviour[0].topic.replace('/','_') +
-                 "| (" + self.behaviour[0].specification("m1") + ")")
+            bs = ("no m1: " + str(node) + ".outbox & topic." + self.behaviour[0].topic.replace('/','_') +
+                 "| (" + self.behaviour[0].specification("m1",negated=True) + ")")
             behaviour_spec = bs
         else:
             bl = []
             for e in self.behaviour:
-                bs = ("(some m1: " + str(node) + ".outbox & topic." + e.topic.replace('/','_') + 
-                    " | (" + e.specification("m1") + "))")
+                bs = ("(no m1: " + str(node) + ".outbox & topic." + e.topic.replace('/','_') + 
+                    " | (" + e.specification("m1",negated=True) + "))")
                 bl.append(bs)
             behaviour_spec = "(" + " or ".join(bl) + ")"
         # Trigger Specification
@@ -175,7 +175,7 @@ class Requirement(Observable):
                     " | (" + e.specification("m0",alias=alias) + "))")
             trigger_specs.append(spec)
         trigger_spec = "(" + " or ".join(trigger_specs) + ")"
-        rts = behaviour_spec + "\n\t\t\timplies before once (" + trigger_spec + ")"
+        rts = behaviour_spec, trigger_spec
         return rts
 
 
@@ -187,25 +187,45 @@ class Property(object):
         self.terminator = t
 
     def specification(self,signature=None):
-        if self.activator != None :
-            ae = Existence(self.activator).specification(signature)
-            if self.terminator != None :
-                te = Existence(self.terminator).specification(signature)
-                ta = Absence(self.terminator).specification(signature)
-        print(self.pattern)
         spec = ""
         if signature is not None:
             spec = self.observable.specification(node=signature)
         else:
             spec = self.observable.specification()
-        if self.pattern == 1 :
-            spec = "eventually (" + spec + ")"
-        elif self.pattern == 2:
-            spec = "always (" + spec + ")"
-        elif self.pattern == 3:
-            spec = "always (" + spec + ")"
-        elif self.pattern == 4:
-            spec = "always (" + spec + ")"
+        if self.activator != None :
+            ae = Existence(self.activator).specification(signature)
+            aa = Absence(self.activator).specification(signature)
+            if self.terminator != None :
+                te = Existence(self.terminator).specification(signature)
+                ta = Absence(self.terminator).specification(signature)
+                if self.pattern == 1 :
+                    spec = "always ((" + ae + " and " + ta + ") implies ((" + ta + ") until ("+ spec +" and "+ ta +")))"
+                elif self.pattern == 2:
+                    spec = "always ((" + ae + " and " + ta + ") implies ((always" + spec + ") or ("+ spec +" until "+ te +")))"
+                elif self.pattern == 3:
+                    aux = "("+spec[0] + " implies ("+ ta +" until ("+ spec[1] +" and "+ ta +"))"+")"
+                    spec = "always ((" + ae + " and " + ta + ") implies ((always" + aux + ") or ("+ aux +" until "+ te +")))"
+                elif self.pattern == 4:
+                    spec = "always ((" + ae + " and " + ta + ") implies ((always" + spec[0] + ") or ("+ spec[0] +" until ("+ spec[1] +" or "+ te +"))))"
+            else:
+                if self.pattern == 1 :
+                    spec = "(always (" + aa + ")) or (eventually (" + ae + " and eventually ("+ spec +")))"
+                elif self.pattern == 2:
+                    spec = "always (" + ae + " implies (always" + spec + "))"
+                elif self.pattern == 3:
+                    spec = "always ("+ ae +" implies always (" + spec[0] + " implies eventually( " + spec[1] + ")))"
+                elif self.pattern == 4:
+                    spec = "(always "+aa+") or eventually ("+ae+" and (always (" + spec[0] + ")) or (" + spec[0] + " until " + spec[1] + "))"
+        else :
+            if self.pattern == 1 :
+                spec = "eventually (" + spec + ")"
+            elif self.pattern == 2:
+                spec = "always (" + spec + ")"
+            elif self.pattern == 3:
+                spec = "always (" + spec[0] + " implies eventually( " + spec[1] + "))"
+            elif self.pattern == 4:
+                spec = "(always (" + spec[0] + ")) or (" + spec[0] + " until " + spec[1] + ")"
+        print(spec)
         return spec
         
 ####################################################
