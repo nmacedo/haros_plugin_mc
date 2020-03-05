@@ -193,6 +193,7 @@ class Property(object):
         else:
             spec = self.observable.specification()
         if self.activator != None :
+            # scopes consider inbox messages
             ae = Existence(self.activator).specification(signature,True)
             aa = Absence(self.activator).specification(signature,True)
             if self.terminator != None :
@@ -225,7 +226,6 @@ class Property(object):
                 spec = "always (" + spec[0] + " implies eventually( " + spec[1] + "))"
             elif self.pattern == 4:
                 spec = "(always (" + spec[0] + ")) or (" + spec[0] + " until " + spec[1] + ")"
-        print(spec)
         return spec
         
 ####################################################
