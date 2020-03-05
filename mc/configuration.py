@@ -86,12 +86,12 @@ class Observable(object):
 class Existence(Observable):
     def __init__(self,b):
         self.behaviour = b  #[Event]
-    def specification(self,node=None):
+    def specification(self,node=None,inbox=False):
         s = ""
         sl = []
         node = "Node" if node is None else str(node)
         for e in self.behaviour:
-            sub_spec = ("(some m0: " + node + ".outbox & " + "topic." + e.topic.replace('/','_') 
+            sub_spec = ("(some m0: " + node + (".inbox" if inbox else ".outbox")+" & " + "topic." + e.topic.replace('/','_') 
                         + " | (" + e.specification("m0") + "))")
             sl.append(sub_spec)
         s = "(" + "or".join(sl) + ")"
@@ -100,12 +100,12 @@ class Existence(Observable):
 class Absence(Observable):
     def __init__(self,b):
         self.behaviour = b  #[Event]
-    def specification(self,node=None):
+    def specification(self,node=None,inbox=False):
         s = ""
         sl = []
         node = "Node" if node is None else str(node)
         for e in self.behaviour:
-            sub_spec = ("(no m0: " + node + ".outbox & topic." + e.topic.replace('/','_')
+            sub_spec = ("(no m0: " + node + (".inbox" if inbox else ".outbox")+" & topic." + e.topic.replace('/','_')
                         + " | (" + e.specification("m0",negated=True) + "))")
             sl.append(sub_spec)
         s = "(" + " or ".join(sl) + ")"
@@ -193,11 +193,11 @@ class Property(object):
         else:
             spec = self.observable.specification()
         if self.activator != None :
-            ae = Existence(self.activator).specification(signature)
-            aa = Absence(self.activator).specification(signature)
+            ae = Existence(self.activator).specification(signature,True)
+            aa = Absence(self.activator).specification(signature,True)
             if self.terminator != None :
-                te = Existence(self.terminator).specification(signature)
-                ta = Absence(self.terminator).specification(signature)
+                te = Existence(self.terminator).specification(signature,True)
+                ta = Absence(self.terminator).specification(signature,True)
                 if self.pattern == 1 :
                     spec = "always ((" + ae + " and " + ta + ") implies ((" + ta + ") until ("+ spec +" and "+ ta +")))"
                 elif self.pattern == 2:
